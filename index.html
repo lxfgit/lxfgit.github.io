@@ -284,6 +284,147 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/31/HDFS常用命令/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="LXF">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/tc.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lxf's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/05/31/HDFS常用命令/" itemprop="url">HDFS常用命令</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-31T10:40:58+08:00">
+                2017-05-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Hadoop/" itemprop="url" rel="index">
+                    <span itemprop="name">Hadoop</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>#文件操作<br>1、建立目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   #加上-p是所有目录都要建立</div><div class="line">hadoop dfs -mkdir  /user/hadoop/examples1    #建立examples1目录</div><div class="line">```    </div><div class="line">2、删除目录</div></pre></td></tr></table></figure></p>
+<p>hadoop dfs -rm -r /user/hadoop/examples    #加上-r，删除examples<br>hadoop dfs -rm -r /user                    #删除user目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">3、列出HDFS下的文件(夹)</div></pre></td></tr></table></figure></p>
+<p>hadoop dfs -ls /                 #查看hdfs根目录下的文件夹(文件)<br>hadoop dfs -ls /user/data        #查看某个目录下的文件夹(文件)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">4、查看文件内容</div></pre></td></tr></table></figure></p>
+<p>hadoop dfs -cat /user/data/in/word.txt     #查看文件内容，必须是一个文件，不能时目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">5、将文件(夹)复制到本地的文件系统</div></pre></td></tr></table></figure></p>
+<p>hadoop dfs -get /user/data   rename                                                      #将data目录复制到当前执行该命令的本地文件系统，并重命名为rename<br>hadoop dfs -get /user/data  /home/user/data  rename                                      #将data目录复制到本地指定目录下，并重命名为rename<br>hadoop dfs -get /user/data  /home/user/data/core-site.xml  /home/user/data/rename.xml    #将core-site.xml复制到本地指定目录下，并重命名为rename.xml</p>
+<p>hadoop dfs -getmerger /user/data/in merge.xml                                            #将hdfs中某个目录下的的文件合并并下载到本地当前目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">#管理与更新</div><div class="line">1、 执行基本信息, 查看HDFS的基本统计信息:</div></pre></td></tr></table></figure></p>
+<p>hadoop dfsadmin -report<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">2、HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布:</div></pre></td></tr></table></figure></p>
+<p>hadoop$bin/start-balancer.sh<br>```</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/31/Git常用命令/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -609,7 +750,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">3</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -620,7 +761,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -631,7 +772,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
