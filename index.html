@@ -373,23 +373,14 @@
 
       
         
-          
-            <p>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong></p>
-<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>假设有两台机器他们的IP和主机名是：<br><em>M1-IP</em>：<code>10.1.130.2</code>         <em>主机名</em>：<code>m1</code><br><em>M2-IP</em>：<code>10.1.130.3</code>         <em>主机名</em>：<code>m2</code><br>如果想要更改主机名，可以在每台机器的<code>/etc/hostname</code>中更改，但是需要<strong>重启生效</strong>。</p>
-<h3 id="映射主机名"><a href="#映射主机名" class="headerlink" title="映射主机名"></a>映射主机名</h3><p>每个机器都进入 <code>/etc/hosts</code> ，并添加所有的主机名和IP映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">10.1.130.2   m1</div><div class="line">10.1.130.3   m2</div></pre></td></tr></table></figure></p>
-<h3 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h3><p>执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 <code>~/.ssh</code> 下面，名为<code>id_rsa.pub</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure></p>
-<h3 id="汇总公钥"><a href="#汇总公钥" class="headerlink" title="汇总公钥"></a>汇总公钥</h3><ul>
-<li><p>汇总公钥至同一机器（为了方面下一步），假如在<code>m2</code>中将公钥复制到<code>m1</code>。</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2</div></pre></td></tr></table></figure>
-</li>
-<li><p>将公钥合并至 <code>authorized_keys</code></p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat id_rsa.pub* &gt;&gt;authorized_keys</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="分发公钥"><a href="#分发公钥" class="headerlink" title="分发公钥"></a>分发公钥</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp authorized_keys m2@10.1.1130.3:~/.ssh</div></pre></td></tr></table></figure>
-<p>大工告成</p>
-
-          
+          <p>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/05/31/SSH免密登录/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -640,36 +631,17 @@
 
       
         
-          
-            <h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
+          <h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
 <li>建立目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   <span class="comment">#加上-p是所有目录都要建立</span></div><div class="line">hadoop dfs -mkdir  /user/hadoop/examples1    <span class="comment">#建立examples1目录</span></div></pre></td></tr></table></figure>
 </li>
 </ul>
-<ul>
-<li>删除目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -rm -r /user/hadoop/examples    <span class="comment">#加上-r，删除examples</span></div><div class="line">hadoop dfs -rm -r /user                    <span class="comment">#删除user目录</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<ul>
-<li><p>列出HDFS下的文件(夹)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -ls /                 #查看hdfs根目录下的文件夹(文件)</div><div class="line">hadoop dfs -ls /user/data        #查看某个目录下的文件夹(文件)</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件内容</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -cat /user/data/in/word.txt     #查看文件内容，必须是一个文件，不能时目录</div></pre></td></tr></table></figure>
-</li>
-<li><p>将文件(夹)复制到本地的文件系统</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -get /user/data   rename                                                      #将data目录复制到当前执行该命令的本地文件系统，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data  rename                                      #将data目录复制到本地指定目录下，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data/core-site.xml  /home/user/data/rename.xml    #将core-site.xml复制到本地指定目录下，并重命名为rename.xml</div><div class="line">    </div><div class="line">hadoop dfs -getmerger /user/data/in merge.xml                                            #将hdfs中某个目录下的的文件合并并下载到本地当前目录</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="管理与更新"><a href="#管理与更新" class="headerlink" title="管理与更新"></a>管理与更新</h2><ol>
-<li><p>执行基本信息, 查看HDFS的基本统计信息:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
-</li>
-<li><p>HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop$bin/start-balancer.sh</div></pre></td></tr></table></figure>
-</li>
-</ol>
-
-          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/05/31/HDFS常用命令/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -800,68 +772,14 @@
 
       
         
-          
-            <h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><ul>
-<li><p>初始化一个版本仓库<br><code>git init</code></p>
-</li>
-<li><p>Clone远程版本库<br><code>git clone git@xbc.me:wordpress.git</code></p>
-</li>
-<li><p>添加远程版本库origin，语法为 git remote add [shortname] [url]<br><code>git remote add origin git@xbc.me:wordpress.git</code></p>
-</li>
-<li><p>查看远程仓库<br><code>git remote -v</code></p>
-</li>
-</ul>
-<h2 id="提交修改"><a href="#提交修改" class="headerlink" title="提交修改"></a>提交修改</h2><ul>
-<li><p>添加当前修改的文件到暂存区<br><code>git add .</code></p>
-</li>
-<li><p>如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件<br><code>git add -u</code></p>
-</li>
-<li><p>提交你的修改<br><code>git commit –m &quot;你的注释&quot;</code></p>
-</li>
-<li><p>推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支]<br><code>git push origin master</code></p>
-</li>
-<li><p>查看文件状态<br><code>git status</code></p>
-</li>
-<li><p>跟踪新文件<br><code>git add readme.txt</code></p>
-</li>
-<li><p>从当前跟踪列表移除文件，并完全删除<br><code>git rm readme.txt</code></p>
-</li>
-<li><p>仅在暂存区删除，保留文件在当前目录，不再跟踪<br><code>git rm –cached readme.txt</code></p>
-</li>
-<li><p>重命名文件<br><code>git mv reademe.txt readme</code></p>
-</li>
-<li><p>查看提交的历史记录<br><code>git log</code></p>
-</li>
-<li><p>修改最后一次提交注释的，利用–amend参数<br><code>git commit --amend</code></p>
-</li>
-<li><p>忘记提交某些修改，下面的三条命令只会得到一个提交<br><code>git commit –m &quot;add readme.txt&quot;</code><br><code>git add readme_forgotten</code><br><code>git commit –amend</code></p>
-</li>
-<li><p>假设你已经使用<code>git add .</code>，将修改过的文件a、b加到暂存区<br>现在你只想提交a文件，不想提交b文件，应该这样<br><code>git reset HEAD b</code></p>
-</li>
-<li><p>取消对文件的修改<br><code>git checkout –- readme.txt</code></p>
-</li>
-</ul>
-<h2 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h2><ul>
-<li><p>创建一个分支<br><code>git branch iss53</code></p>
-</li>
-<li><p>切换工作目录到iss53<br><code>git chekcout iss53</code></p>
-</li>
-<li><p>将上面的命令合在一起，创建iss53分支并切换到iss53<br><code>git chekcout –b iss53</code></p>
-</li>
-<li><p>合并iss53分支，当前工作目录为master<br><code>git merge iss53</code></p>
-</li>
-<li><p>合并完成后，没有出现冲突，删除iss53分支<br><code>git branch –d iss53</code></p>
-</li>
-<li><p>拉去远程仓库的数据，语法为 git fetch [remote-name]<br><code>git fetch</code></p>
-</li>
-<li><p>fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并<br><code>git pull</code></p>
-</li>
-<li><p>查看远程仓库的信息<br><code>git remote show origin</code></p>
-</li>
-<li>建立本地的dev分支追踪远程仓库的develop分支<br><code>git checkout –b dev origin/develop+ #分支管理</code></li>
-</ul>
-
-          
+          <h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><p>e 初始化一个版本仓库<br><code>git init</code><br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/05/31/Git常用命令/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
