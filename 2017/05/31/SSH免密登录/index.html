@@ -90,17 +90,17 @@
 
 
 
-<meta name="description" content="在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题">
+<meta name="description" content="纸上得来终觉浅，要知此事须躬行">
 <meta name="keywords" content="免密登录">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SSH免密登录">
 <meta property="og:url" content="http://yoursite.com/2017/05/31/SSH免密登录/index.html">
 <meta property="og:site_name" content="lxf&#39;s blog">
-<meta property="og:description" content="在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题">
-<meta property="og:updated_time" content="2017-05-31T06:08:42.000Z">
+<meta property="og:description" content="纸上得来终觉浅，要知此事须躬行">
+<meta property="og:updated_time" content="2017-06-01T00:27:52.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SSH免密登录">
-<meta name="twitter:description" content="在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题">
+<meta name="twitter:description" content="纸上得来终觉浅，要知此事须躬行">
 
 
 
@@ -401,7 +401,7 @@
       
 
       
-        <p>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br><a id="more"></a></p>
+        <p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br><a id="more"></a><br>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong></p>
 <h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>假设有两台机器他们的IP和主机名是：<br><em>M1-IP</em>：<code>10.1.130.2</code>         <em>主机名</em>：<code>m1</code><br><em>M2-IP</em>：<code>10.1.130.3</code>         <em>主机名</em>：<code>m2</code><br>如果想要更改主机名，可以在每台机器的<code>/etc/hostname</code>中更改，但是需要<strong>重启生效</strong>。</p>
 <h3 id="映射主机名"><a href="#映射主机名" class="headerlink" title="映射主机名"></a>映射主机名</h3><p>每个机器都进入 <code>/etc/hosts</code> ，并添加所有的主机名和IP映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">10.1.130.2   m1</div><div class="line">10.1.130.3   m2</div></pre></td></tr></table></figure></p>
 <h3 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h3><p>执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 <code>~/.ssh</code> 下面，名为<code>id_rsa.pub</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure></p>
