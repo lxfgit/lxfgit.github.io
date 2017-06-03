@@ -404,21 +404,16 @@
 
       
         
-          
-            <blockquote class="blockquote-center">尽人事，听天命</blockquote>
+          <blockquote class="blockquote-center">尽人事，听天命</blockquote>
 
-<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的，如果想使用配置好一点的机器的话。可以现在可用的机器上配置一下，验证模型，再去想办法提高硬件配置。自己亲自配置一下，更加加深了对集群的理解，废话不多说，下面进入正题。</p>
-<p>软件准备：</p>
-<ul>
-<li>jdk</li>
-<li><p>scala</p>
-</li>
-<li><p>hadoop</p>
-</li>
-<li>spark<br>jdk 和 scala 的安装和配置大同小异，</li>
-</ul>
-
-          
+<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的，如果想使用配置好一点的机器的话。可以现在可用的机器上配置一下，验证模型，再去想办法提高硬件配置。自己亲自配置一下，更加加深了对集群的理解，废话不多说，下面进入正题。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/06/02/Spark-On-YARN集群环境搭建/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -560,7 +555,7 @@
 
       
         
-          <p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br>
+          <p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/05/31/SSH免密登录/#more" rel="contents">
@@ -709,7 +704,12 @@
 
       
         
-          <p><blockquote class="blockquote-center">衣带渐宽终不悔，为伊消得人憔悴</blockquote><br>
+          <blockquote class="blockquote-center">衣带渐宽终不悔，为伊消得人憔悴</blockquote>
+
+<h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
+<li>建立目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   <span class="comment">#加上-p是所有目录都要建立</span></div><div class="line">eadoop dfs -mkdir  /user/hadoop/examples1    <span class="comment">#建立examples1目录</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/05/31/HDFS常用命令/#more" rel="contents">
@@ -858,7 +858,11 @@
 
       
         
-          <p><blockquote class="blockquote-center">优秀的人，不是不合群，而是他们合群的人里面没有你</blockquote><br>
+          <p><blockquote class="blockquote-center">优秀的人，不是不合群，而是他们合群的人里面没有你</blockquote></p>
+<h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><ul>
+<li>初始化一个版本仓库<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git init</div></pre></td></tr></table></figure>
+</li>
+</ul>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/05/31/Git常用命令/#more" rel="contents">
