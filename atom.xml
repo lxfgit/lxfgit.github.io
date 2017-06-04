@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-06-03T03:41:26.000Z</updated>
+  <updated>2017-06-04T04:59:22.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,26 +20,27 @@
     <link href="http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
     <id>http://yoursite.com/2017/06/02/Spark-On-YARN集群环境搭建/</id>
     <published>2017-06-02T14:54:56.000Z</published>
-    <updated>2017-06-03T03:41:26.000Z</updated>
+    <updated>2017-06-04T04:59:22.000Z</updated>
     
     <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
 
-<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的，如果想使用配置好一点的机器的话。可以现在可用的机器上配置一下，验证模型，再去想办法提高硬件配置。自己亲自配置一下，更加加深了对集群的理解，废话不多说，下面进入正题。<br><a id="more"></a><br>软件准备：</p>
+<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
+<h1 id="0-写在前面"><a href="#0-写在前面" class="headerlink" title="0.写在前面"></a>0.写在前面</h1><p>用户尽量使用带有root权限的用户，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。</p>
+<p>软件准备：</p>
 <ul>
 <li>jdk</li>
-<li><p>scala</p>
-</li>
-<li><p>hadoop</p>
-</li>
-<li>spark<br>jdk 和 scala 的安装和配置大同小异，</li>
+<li>scala</li>
+<li>hadoop</li>
+<li>spark</li>
 </ul>
+<p>这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异，</p>
 ]]></content>
     
     <summary type="html">
     
       &lt;blockquote class=&quot;blockquote-center&quot;&gt;尽人事，听天命&lt;/blockquote&gt;
 
-&lt;p&gt;最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的，如果想使用配置好一点的机器的话。可以现在可用的机器上配置一下，验证模型，再去想办法提高硬件配置。自己亲自配置一下，更加加深了对集群的理解，废话不多说，下面进入正题。&lt;br&gt;
+&lt;p&gt;最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。&lt;br&gt;
     
     </summary>
     
