@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-06-04T04:59:22.000Z</updated>
+  <updated>2017-06-04T05:20:25.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,12 +20,12 @@
     <link href="http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
     <id>http://yoursite.com/2017/06/02/Spark-On-YARN集群环境搭建/</id>
     <published>2017-06-02T14:54:56.000Z</published>
-    <updated>2017-06-04T04:59:22.000Z</updated>
+    <updated>2017-06-04T05:20:25.000Z</updated>
     
     <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
 
 <p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
-<h1 id="0-写在前面"><a href="#0-写在前面" class="headerlink" title="0.写在前面"></a>0.写在前面</h1><p>用户尽量使用带有root权限的用户，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。</p>
+<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是yh，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。</p>
 <p>软件准备：</p>
 <ul>
 <li>jdk</li>
@@ -34,6 +34,29 @@
 <li>spark</li>
 </ul>
 <p>这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异，</p>
+<h1 id="修改主机名"><a href="#修改主机名" class="headerlink" title="修改主机名"></a>修改主机名</h1><p>我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为：</p>
+<blockquote>
+<p>10.1.130.21</p>
+<p>10.1.130.22</p>
+<p>10.1.130.23</p>
+</blockquote>
+<p>这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 <code>vi /etc/hostname</code></p>
+<p>21节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div></pre></td></tr></table></figure>
+<p>21节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.22  salve1</div></pre></td></tr></table></figure>
+<p>21节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
+<p>配置完主机名之后，需要重启生效。</p>
+<p>然后就是修改每个节点的hosts文件，方法是<code>vi /etc/hosts</code></p>
+<p>每个节点都做同样的修改，添加如下配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div><div class="line">10.1.130.22  salve1</div><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
+<p>配置完成后，需要互ping一下，检查是否成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yh@master$ ping slave1 <span class="comment">#从master ping slave1，其他的类似</span></div></pre></td></tr></table></figure>
+<h1 id="SSH免密登录"><a href="#SSH免密登录" class="headerlink" title="SSH免密登录"></a>SSH免密登录</h1><p>如果机器没有安装ssh服务可以安装一下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install openssh-server</div></pre></td></tr></table></figure>
+<p>免密登录，可以参考之间的方法 <a href="http://lxfyf.site/2017/05/31/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/" target="_blank" rel="external">ssh免密登录</a></p>
+<p># </p>
 ]]></content>
     
     <summary type="html">
