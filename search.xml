@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title><![CDATA[Spark On YARN集群环境搭建]]></title>
+    <url>%2F2017%2F06%2F02%2FSpark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%2F</url>
+    <content type="text"><![CDATA[尽人事，听天命 最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的，如果想使用配置好一点的机器的话。可以现在可用的机器上配置一下，验证模型，再去想办法提高硬件配置。自己亲自配置一下，更加加深了对集群的理解，废话不多说，下面进入正题。软件准备： jdk scala hadoop sparkjdk 和 scala 的安装和配置大同小异，]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>Spark</tag>
+        <tag>YARN</tag>
+        <tag>分布式环境搭建</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[SSH免密登录]]></title>
+    <url>%2F2017%2F05%2F31%2FSSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%2F</url>
+    <content type="text"><![CDATA[纸上得来终觉浅，要知此事须躬行在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题 准备假设有两台机器他们的IP和主机名是：M1-IP：10.1.130.2 主机名：m1M2-IP：10.1.130.3 主机名：m2如果想要更改主机名，可以在每台机器的/etc/hostname中更改，但是需要重启生效。 映射主机名每个机器都进入 /etc/hosts ，并添加所有的主机名和IP映射1210.1.130.2 m110.1.130.3 m2 生成公钥执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 ~/.ssh 下面，名为id_rsa.pub。1ssh-keygen -t rsa 汇总公钥 汇总公钥至同一机器（为了方面下一步），假如在m2中将公钥复制到m1。 1scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2 将公钥合并至 authorized_keys 1cat id_rsa.pub* &gt;&gt;authorized_keys 分发公钥1scp authorized_keys m2@10.1.1130.3:~/.ssh 大工告成]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>免密登录</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[HDFS常用命令]]></title>
+    <url>%2F2017%2F05%2F31%2FHDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[衣带渐宽终不悔，为伊消得人憔悴 文件操作 建立目录12hadoop dfs -mkdir -p /user/hadoop/examples #加上-p是所有目录都要建立eadoop dfs -mkdir /user/hadoop/examples1 #建立examples1目录 删除目录12hadoop dfs -rm -r /user/hadoop/examples #加上-r，删除exampleshadoop dfs -rm -r /user #删除user目录 列出HDFS下的文件(夹) 12hadoop dfs -ls / #查看hdfs根目录下的文件夹(文件)hadoop dfs -ls /user/data #查看某个目录下的文件夹(文件) 查看文件内容 1hadoop dfs -cat /user/data/in/word.txt #查看文件内容，必须是一个文件，不能时目录 将文件(夹)复制到本地的文件系统 12345hadoop dfs -get /user/data rename #将data目录复制到当前执行该命令的本地文件系统，并重命名为renamehadoop dfs -get /user/data /home/user/data rename #将data目录复制到本地指定目录下，并重命名为renamehadoop dfs -get /user/data /home/user/data/core-site.xml /home/user/data/rename.xml #将core-site.xml复制到本地指定目录下，并重命名为rename.xml hadoop dfs -getmerger /user/data/in merge.xml #将hdfs中某个目录下的的文件合并并下载到本地当前目录 管理与更新 执行基本信息, 查看HDFS的基本统计信息: 1hadoop dfsadmin -report HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布: 1hadoop$bin/start-balancer.sh]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>hadoop</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Git常用命令]]></title>
+    <url>%2F2017%2F05%2F31%2FGit%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[优秀的人，不是不合群，而是他们合群的人里面没有你 获取仓库 初始化一个版本仓库1git init Clone远程版本库 1git clone git@xbc.me:wordpress.git 添加远程版本库origin，语法为 git remote add [shortname] [url] 1git remote add origin git@xbc.me:wordpress.git 查看远程仓库 1git remote -v 提交修改 添加当前修改的文件到暂存区 1git add . 如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件 1git add -u 提交你的修改 1git commit –m "你的注释" 推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支] 1git push origin master 查看文件状态 1git status 跟踪新文件 1git add readme.txt 从当前跟踪列表移除文件，并完全删除 1git rm readme.txt 仅在暂存区删除，保留文件在当前目录，不再跟踪 1git rm –cached readme.txt 重命名文件 1git mv reademe.txt readme 查看提交的历史记录 1git log 修改最后一次提交注释的，利用–amend参数 1git commit --amend 忘记提交某些修改，下面的三条命令只会得到一个提交 123git commit –m "add readme.txt"git add readme_forgottengit commit –amend 假设你已经使用git add .，将修改过的文件a、b加到暂存区现在你只想提交a文件，不想提交b文件，应该这样 1git reset HEAD b 取消对文件的修改 1git checkout –- readme.txt 分支管理 创建一个分支 1git branch iss53 切换工作目录到iss53 1git chekcout iss53 将上面的命令合在一起，创建iss53分支并切换到iss53 1git chekcout –b iss53 合并iss53分支，当前工作目录为master 1git merge iss53 合并完成后，没有出现冲突，删除iss53分支 1git branch –d iss53 拉去远程仓库的数据，语法为 git fetch [remote-name] 1git fetch fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并 1git pull 查看远程仓库的信息 1git remote show origin 建立本地的dev分支追踪远程仓库的develop分支 1git checkout –b dev origin/develop+ #分支管理]]></content>
+      <categories>
+        <category>Git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+      </tags>
+  </entry>
+</search>
