@@ -1,260 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<search> 
-  
-    
-    <entry>
-      <title><![CDATA[Spark On YARN集群环境搭建]]></title>
-      <url>/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</url>
-      <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
-
-<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
-<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是yh，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。</p>
-<p>软件准备：</p>
-<ul>
-<li>jdk</li>
-<li>scala</li>
-<li>hadoop</li>
-<li>spark</li>
-</ul>
-<p>这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异，</p>
-<h1 id="修改主机名"><a href="#修改主机名" class="headerlink" title="修改主机名"></a>修改主机名</h1><p>我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为：</p>
-<blockquote>
-<p>10.1.130.21</p>
-<p>10.1.130.22</p>
-<p>10.1.130.23</p>
-</blockquote>
-<p>这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 <code>vi /etc/hostname</code></p>
-<p>21节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div></pre></td></tr></table></figure>
-<p>21节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.22  salve1</div></pre></td></tr></table></figure>
-<p>21节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
-<p>配置完主机名之后，需要重启生效。</p>
-<p>然后就是修改每个节点的hosts文件，方法是<code>vi /etc/hosts</code></p>
-<p>每个节点都做同样的修改，添加如下配置：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div><div class="line">10.1.130.22  salve1</div><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
-<p>配置完成后，需要互ping一下，检查是否成功</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yh@master$ ping slave1 <span class="comment">#从master ping slave1，其他的类似</span></div></pre></td></tr></table></figure>
-<h1 id="SSH免密登录"><a href="#SSH免密登录" class="headerlink" title="SSH免密登录"></a>SSH免密登录</h1><p>如果机器没有安装ssh服务可以安装一下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install openssh-server</div></pre></td></tr></table></figure>
-<p>免密登录，可以参考之间的方法 <a href="http://lxfyf.site/2017/05/31/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/" target="_blank" rel="external">ssh免密登录</a></p>
-<p># </p>
-]]></content>
-      
-        <categories>
-            
-            <category> 分布式系统 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Spark </tag>
-            
-            <tag> YARN </tag>
-            
-            <tag> 分布式环境搭建 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[SSH免密登录]]></title>
-      <url>/2017/05/31/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br><a id="more"></a></p>
-<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>假设有两台机器他们的IP和主机名是：<br><em>M1-IP</em>：<code>10.1.130.2</code>         <em>主机名</em>：<code>m1</code><br><em>M2-IP</em>：<code>10.1.130.3</code>         <em>主机名</em>：<code>m2</code><br>如果想要更改主机名，可以在每台机器的<code>/etc/hostname</code>中更改，但是需要<strong>重启生效</strong>。</p>
-<h3 id="映射主机名"><a href="#映射主机名" class="headerlink" title="映射主机名"></a>映射主机名</h3><p>每个机器都进入 <code>/etc/hosts</code> ，并添加所有的主机名和IP映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">10.1.130.2   m1</div><div class="line">10.1.130.3   m2</div></pre></td></tr></table></figure></p>
-<h3 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h3><p>执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 <code>~/.ssh</code> 下面，名为<code>id_rsa.pub</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure></p>
-<h3 id="汇总公钥"><a href="#汇总公钥" class="headerlink" title="汇总公钥"></a>汇总公钥</h3><ul>
-<li><p>汇总公钥至同一机器（为了方面下一步），假如在<code>m2</code>中将公钥复制到<code>m1</code>。</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2</div></pre></td></tr></table></figure>
-</li>
-<li><p>将公钥合并至 <code>authorized_keys</code></p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat id_rsa.pub* &gt;&gt;authorized_keys</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="分发公钥"><a href="#分发公钥" class="headerlink" title="分发公钥"></a>分发公钥</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp authorized_keys m2@10.1.1130.3:~/.ssh</div></pre></td></tr></table></figure>
-<p>大工告成</p>
-]]></content>
-      
-        <categories>
-            
-            <category> Linux </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> 免密登录 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[HDFS常用命令]]></title>
-      <url>/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
-      <content type="html"><![CDATA[<blockquote class="blockquote-center">衣带渐宽终不悔，为伊消得人憔悴</blockquote>
-
-<h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
-<li>建立目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   <span class="comment">#加上-p是所有目录都要建立</span></div><div class="line">eadoop dfs -mkdir  /user/hadoop/examples1    <span class="comment">#建立examples1目录</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<a id="more"></a> 
-<ul>
-<li>删除目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -rm -r /user/hadoop/examples    <span class="comment">#加上-r，删除examples</span></div><div class="line">hadoop dfs -rm -r /user                    <span class="comment">#删除user目录</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<ul>
-<li><p>列出HDFS下的文件(夹)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -ls /                 #查看hdfs根目录下的文件夹(文件)</div><div class="line">hadoop dfs -ls /user/data        #查看某个目录下的文件夹(文件)</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件内容</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -cat /user/data/in/word.txt     #查看文件内容，必须是一个文件，不能时目录</div></pre></td></tr></table></figure>
-</li>
-<li><p>将文件(夹)复制到本地的文件系统</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -get /user/data   rename                                                      #将data目录复制到当前执行该命令的本地文件系统，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data  rename                                      #将data目录复制到本地指定目录下，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data/core-site.xml  /home/user/data/rename.xml    #将core-site.xml复制到本地指定目录下，并重命名为rename.xml</div><div class="line">    </div><div class="line">hadoop dfs -getmerger /user/data/in merge.xml                                            #将hdfs中某个目录下的的文件合并并下载到本地当前目录</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="管理与更新"><a href="#管理与更新" class="headerlink" title="管理与更新"></a>管理与更新</h2><ul>
-<li><p>执行基本信息, 查看HDFS的基本统计信息:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
-</li>
-<li><p>HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop$bin/start-balancer.sh</div></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-      
-        <categories>
-            
-            <category> 分布式系统 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> hadoop </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[Git常用命令]]></title>
-      <url>/2017/05/31/Git%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">优秀的人，不是不合群，而是他们合群的人里面没有你</blockquote></p>
-<h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><ul>
-<li>初始化一个版本仓库<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git init</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<a id="more"></a>
-<ul>
-<li><p>Clone远程版本库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">clone</span> git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
-</li>
-<li><p>添加远程版本库origin，语法为 git remote add [shortname] [url]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote add origin git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看远程仓库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote -v</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="提交修改"><a href="#提交修改" class="headerlink" title="提交修改"></a>提交修改</h2><ul>
-<li><p>添加当前修改的文件到暂存区</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add .</div></pre></td></tr></table></figure>
-</li>
-<li><p>如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add -u</div></pre></td></tr></table></figure>
-</li>
-<li><p>提交你的修改</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"你的注释"</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git push origin master</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件状态</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git status</div></pre></td></tr></table></figure>
-</li>
-<li><p>跟踪新文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>从当前跟踪列表移除文件，并完全删除</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>仅在暂存区删除，保留文件在当前目录，不再跟踪</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm –cached readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>重命名文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git mv reademe.txt readme</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看提交的历史记录</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">log</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>修改最后一次提交注释的，利用–amend参数</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit --amend</div></pre></td></tr></table></figure>
-</li>
-<li><p>忘记提交某些修改，下面的三条命令只会得到一个提交</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"add readme.txt"</span></div><div class="line">git add readme_forgotten</div><div class="line">git commit –amend</div></pre></td></tr></table></figure>
-</li>
-<li><p>假设你已经使用<code>git add .</code>，将修改过的文件a、b加到暂存区<br>现在你只想提交a文件，不想提交b文件，应该这样</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git reset HEAD b</div></pre></td></tr></table></figure>
-</li>
-<li><p>取消对文件的修改</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –- readme.txt</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h2><ul>
-<li><p>创建一个分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>切换工作目录到iss53</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>将上面的命令合在一起，创建iss53分支并切换到iss53</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout –b iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>合并iss53分支，当前工作目录为master</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git merge iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>合并完成后，没有出现冲突，删除iss53分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch –d iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>拉去远程仓库的数据，语法为 git fetch [remote-name]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git fetch</div></pre></td></tr></table></figure>
-</li>
-<li><p>fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git pull</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看远程仓库的信息</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote show origin</div></pre></td></tr></table></figure>
-</li>
-<li><p>建立本地的dev分支追踪远程仓库的develop分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –b dev origin/develop+ <span class="comment">#分支管理</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-      
-        <categories>
-            
-            <category> Git </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> git </tag>
-            
-        </tags>
-        
-    </entry>
-    
-  
-  
+<search>
+  <entry>
+    <title><![CDATA[SpringMVC的执行流程]]></title>
+    <url>%2F2017%2F06%2F05%2FSpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%2F</url>
+    <content type="text"><![CDATA[在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。Spring MVC 工作流程图 SpringMVC 处理请求过程： 用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获； DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。 DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法） 提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作： + HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息 + 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等 + 数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等 + 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中 Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象； 根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ； ViewResolver 结合Model和View，来渲染视图 将渲染结果返回给客户端。 Spring MVC工作流程图 UML时序图 组件说明： 以下组件通常使用框架提供实现： DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。 HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。 HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。 ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。]]></content>
+      <categories>
+        <category>Web开发框架</category>
+        <category>Spring</category>
+      </categories>
+  </entry>
+  <entry>
+    <title><![CDATA[Spark On YARN集群环境搭建]]></title>
+    <url>%2F2017%2F06%2F02%2FSpark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%2F</url>
+    <content type="text"><![CDATA[尽人事，听天命 最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。 写在前面用户尽量使用带有root权限的用户，这里假设每个机器的用户是yh，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。 软件准备： jdk scala hadoop spark 这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异， 修改主机名我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为： 10.1.130.21 10.1.130.22 10.1.130.23 这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 vi /etc/hostname 21节点： 110.1.130.21 master 21节点： 110.1.130.22 salve1 21节点： 110.1.130.23 slave2 配置完主机名之后，需要重启生效。 然后就是修改每个节点的hosts文件，方法是vi /etc/hosts 每个节点都做同样的修改，添加如下配置： 12310.1.130.21 master10.1.130.22 salve110.1.130.23 slave2 配置完成后，需要互ping一下，检查是否成功 1yh@master$ ping slave1 #从master ping slave1，其他的类似 SSH免密登录如果机器没有安装ssh服务可以安装一下： 1sudo apt-get install openssh-server 免密登录，可以参考之间的方法 ssh免密登录 #]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>Spark</tag>
+        <tag>YARN</tag>
+        <tag>分布式环境搭建</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[SSH免密登录]]></title>
+    <url>%2F2017%2F05%2F31%2FSSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%2F</url>
+    <content type="text"><![CDATA[纸上得来终觉浅，要知此事须躬行在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题 准备假设有两台机器他们的IP和主机名是：M1-IP：10.1.130.2 主机名：m1M2-IP：10.1.130.3 主机名：m2如果想要更改主机名，可以在每台机器的/etc/hostname中更改，但是需要重启生效。 映射主机名每个机器都进入 /etc/hosts ，并添加所有的主机名和IP映射1210.1.130.2 m110.1.130.3 m2 生成公钥执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 ~/.ssh 下面，名为id_rsa.pub。1ssh-keygen -t rsa 汇总公钥 汇总公钥至同一机器（为了方面下一步），假如在m2中将公钥复制到m1。 1scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2 将公钥合并至 authorized_keys 1cat id_rsa.pub* &gt;&gt;authorized_keys 分发公钥1scp authorized_keys m2@10.1.1130.3:~/.ssh 大工告成]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>免密登录</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[HDFS常用命令]]></title>
+    <url>%2F2017%2F05%2F31%2FHDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[衣带渐宽终不悔，为伊消得人憔悴 文件操作 建立目录12hadoop dfs -mkdir -p /user/hadoop/examples #加上-p是所有目录都要建立eadoop dfs -mkdir /user/hadoop/examples1 #建立examples1目录 删除目录12hadoop dfs -rm -r /user/hadoop/examples #加上-r，删除exampleshadoop dfs -rm -r /user #删除user目录 列出HDFS下的文件(夹) 12hadoop dfs -ls / #查看hdfs根目录下的文件夹(文件)hadoop dfs -ls /user/data #查看某个目录下的文件夹(文件) 查看文件内容 1hadoop dfs -cat /user/data/in/word.txt #查看文件内容，必须是一个文件，不能时目录 将文件(夹)复制到本地的文件系统 12345hadoop dfs -get /user/data rename #将data目录复制到当前执行该命令的本地文件系统，并重命名为renamehadoop dfs -get /user/data /home/user/data rename #将data目录复制到本地指定目录下，并重命名为renamehadoop dfs -get /user/data /home/user/data/core-site.xml /home/user/data/rename.xml #将core-site.xml复制到本地指定目录下，并重命名为rename.xml hadoop dfs -getmerger /user/data/in merge.xml #将hdfs中某个目录下的的文件合并并下载到本地当前目录 管理与更新 执行基本信息, 查看HDFS的基本统计信息: 1hadoop dfsadmin -report HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布: 1hadoop$bin/start-balancer.sh]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>hadoop</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Git常用命令]]></title>
+    <url>%2F2017%2F05%2F31%2FGit%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[优秀的人，不是不合群，而是他们合群的人里面没有你 获取仓库 初始化一个版本仓库1git init Clone远程版本库 1git clone git@xbc.me:wordpress.git 添加远程版本库origin，语法为 git remote add [shortname] [url] 1git remote add origin git@xbc.me:wordpress.git 查看远程仓库 1git remote -v 提交修改 添加当前修改的文件到暂存区 1git add . 如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件 1git add -u 提交你的修改 1git commit –m "你的注释" 推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支] 1git push origin master 查看文件状态 1git status 跟踪新文件 1git add readme.txt 从当前跟踪列表移除文件，并完全删除 1git rm readme.txt 仅在暂存区删除，保留文件在当前目录，不再跟踪 1git rm –cached readme.txt 重命名文件 1git mv reademe.txt readme 查看提交的历史记录 1git log 修改最后一次提交注释的，利用–amend参数 1git commit --amend 忘记提交某些修改，下面的三条命令只会得到一个提交 123git commit –m "add readme.txt"git add readme_forgottengit commit –amend 假设你已经使用git add .，将修改过的文件a、b加到暂存区现在你只想提交a文件，不想提交b文件，应该这样 1git reset HEAD b 取消对文件的修改 1git checkout –- readme.txt 分支管理 创建一个分支 1git branch iss53 切换工作目录到iss53 1git chekcout iss53 将上面的命令合在一起，创建iss53分支并切换到iss53 1git chekcout –b iss53 合并iss53分支，当前工作目录为master 1git merge iss53 合并完成后，没有出现冲突，删除iss53分支 1git branch –d iss53 拉去远程仓库的数据，语法为 git fetch [remote-name] 1git fetch fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并 1git pull 查看远程仓库的信息 1git remote show origin 建立本地的dev分支追踪远程仓库的develop分支 1git checkout –b dev origin/develop+ #分支管理]]></content>
+      <categories>
+        <category>Git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+      </tags>
+  </entry>
 </search>

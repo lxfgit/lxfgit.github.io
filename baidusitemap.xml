@@ -4,6 +4,27 @@
 
     
   <url>
+    <loc>http://yoursite.com/2017/06/05/SpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/</loc>
+    <lastmod>2017-06-05T16:50:24.000Z</lastmod>
+    <data>
+        <display>
+        <title>SpringMVC的执行流程</title>
+        <pubTime>2017-06-05T14:06:51.000Z</pubTime>
+        
+         
+           
+             
+              <breadCrumb title="Web开发框架" url="http://yoursite.com/categories/Web%E5%BC%80%E5%8F%91%E6%A1%86%E6%9E%B6/"/>
+          
+             
+              <breadCrumb title="Spring" url="http://yoursite.com/categories/Web%E5%BC%80%E5%8F%91%E6%A1%86%E6%9E%B6/Spring/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</loc>
     <lastmod>2017-06-04T05:20:25.000Z</lastmod>
     <data>

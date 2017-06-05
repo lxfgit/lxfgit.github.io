@@ -92,16 +92,20 @@
 
 
 
-<meta name="description" content="以平常心读一本世俗">
-<meta property="og:type" content="website">
-<meta property="og:title" content="分类">
-<meta property="og:url" content="http://yoursite.com/categories/index.html">
+<meta name="description" content="在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringMVC的执行流程">
+<meta property="og:url" content="http://yoursite.com/2017/06/05/SpringMVC的执行流程/index.html">
 <meta property="og:site_name" content="平民">
-<meta property="og:description" content="以平常心读一本世俗">
-<meta property="og:updated_time" content="2017-05-31T17:54:37.000Z">
+<meta property="og:description" content="在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta property="og:image" content="http://yoursite.com/2017/06/05/images/SpringMVC运行流程分析.png">
+<meta property="og:image" content="http://yoursite.com/2017/06/05/images/Spring%20MVC工作流程图.png">
+<meta property="og:image" content="http://yoursite.com/2017/06/05/images/Spring%20MVC-UML.png">
+<meta property="og:updated_time" content="2017-06-05T16:50:24.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="分类">
-<meta name="twitter:description" content="以平常心读一本世俗">
+<meta name="twitter:title" content="SpringMVC的执行流程">
+<meta name="twitter:description" content="在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta name="twitter:image" content="http://yoursite.com/2017/06/05/images/SpringMVC运行流程分析.png">
 
 
 
@@ -129,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/categories/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/06/05/SpringMVC的执行流程/"/>
 
 
 
 
 
-  <title>分类 | 平民</title>
+  <title>SpringMVC的执行流程 | 平民</title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -171,7 +175,7 @@
     
   
 
-  <div class="container sidebar-position-left  ">
+  <div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -320,25 +324,223 @@
             
 
   <div id="posts" class="posts-expand">
-  <header class="post-header">
+    
 
-	<h1 class="post-title" itemprop="name headline">分类</h1>
+  
 
+  
+  
+  
 
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/05/SpringMVC的执行流程/">
 
-</header>
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="LXF">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/tc.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="平民">
+    </span>
 
     
-    
-      <div class="category-all-page">
-        <div class="category-all-title">
-            目前共计 5 个分类
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">SpringMVC的执行流程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-05T22:06:51+08:00">
+                2017-06-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Web开发框架/" itemprop="url" rel="index">
+                    <span itemprop="name">Web开发框架</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Web开发框架/Spring/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2017/06/05/SpringMVC的执行流程/" class="leancloud_visitors" data-flag-title="SpringMVC的执行流程">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
         </div>
-        <div class="category-all">
-          <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Git/">Git</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web开发框架/">Web开发框架</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Web开发框架/Spring/">Spring</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式系统/">分布式系统</a><span class="category-list-count">2</span></li></ul>
-        </div>
-      </div>
+      </header>
     
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><blockquote class="blockquote-center"></blockquote><br>在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。<br><a id="more"></a><br><strong>Spring MVC 工作流程图</strong><br><img src="../images/SpringMVC运行流程分析.png" alt=""></p>
+<p><strong>SpringMVC 处理请求过程：</strong></p>
+<ol>
+<li>用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；</li>
+</ol>
+<ol>
+<li>DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。</li>
+</ol>
+<ol>
+<li>DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法）</li>
+</ol>
+<ol>
+<li>提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：</li>
+</ol>
+<pre><code>+ HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息
++ 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等
++ 数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等
++ 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中
+</code></pre><ol>
+<li>Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；</li>
+</ol>
+<ol>
+<li>根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ；</li>
+</ol>
+<ol>
+<li>ViewResolver 结合Model和View，来渲染视图</li>
+</ol>
+<ol>
+<li>将渲染结果返回给客户端。</li>
+</ol>
+<p><strong>Spring MVC工作流程图</strong><br><img src="../images/Spring MVC工作流程图.png" alt=""></p>
+<p><strong>UML时序图</strong><br><img src="../images/Spring MVC-UML.png" alt=""></p>
+<p><strong>组件说明：</strong></p>
+<p>以下组件通常使用框架提供实现：</p>
+<ul>
+<li>DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。</li>
+<li>HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。</li>
+<li>HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。</li>
+<li>ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/02/Spark-On-YARN集群环境搭建/" rel="next" title="Spark On YARN集群环境搭建">
+                <i class="fa fa-chevron-left"></i> Spark On YARN集群环境搭建
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
   </div>
 
 
@@ -591,6 +793,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
 
   
 
