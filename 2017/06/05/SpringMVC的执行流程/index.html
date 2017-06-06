@@ -74,7 +74,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="SpringMVC,SpringMVC执行流程," />
 
 
 
@@ -92,20 +92,21 @@
 
 
 
-<meta name="description" content="在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta name="description" content="三更灯火五更鸡，正是男儿读书时在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta name="keywords" content="SpringMVC,SpringMVC执行流程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SpringMVC的执行流程">
 <meta property="og:url" content="http://yoursite.com/2017/06/05/SpringMVC的执行流程/index.html">
 <meta property="og:site_name" content="平民">
-<meta property="og:description" content="在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
-<meta property="og:image" content="http://yoursite.com/2017/06/05/images/SpringMVC运行流程分析.png">
-<meta property="og:image" content="http://yoursite.com/2017/06/05/images/Spring%20MVC工作流程图.png">
-<meta property="og:image" content="http://yoursite.com/2017/06/05/images/Spring%20MVC-UML.png">
-<meta property="og:updated_time" content="2017-06-05T16:50:24.000Z">
+<meta property="og:description" content="三更灯火五更鸡，正是男儿读书时在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1496755889/SpringMVC%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90_ewz7aa.png">
+<meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1496755888/Spring_MVC%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E5%9B%BE_lhxuct.png">
+<meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1496755881/Spring_MVC-UML_sdj0tz.png">
+<meta property="og:updated_time" content="2017-06-06T13:38:34.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SpringMVC的执行流程">
-<meta name="twitter:description" content="在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
-<meta name="twitter:image" content="http://yoursite.com/2017/06/05/images/SpringMVC运行流程分析.png">
+<meta name="twitter:description" content="三更灯火五更鸡，正是男儿读书时在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。">
+<meta name="twitter:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1496755889/SpringMVC%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90_ewz7aa.png">
 
 
 
@@ -441,40 +442,27 @@
       
 
       
-        <p><blockquote class="blockquote-center"></blockquote><br>在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。<br><a id="more"></a><br><strong>Spring MVC 工作流程图</strong><br><img src="../images/SpringMVC运行流程分析.png" alt=""></p>
-<p><strong>SpringMVC 处理请求过程：</strong></p>
-<ol>
+        <p><blockquote class="blockquote-center"><br>三更灯火五更鸡，正是男儿读书时<br></blockquote><br><strong>在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。</strong><br><a id="more"></a></p>
+<h3 id="Spring-MVC-工作流程图"><a href="#Spring-MVC-工作流程图" class="headerlink" title="Spring MVC 工作流程图"></a>Spring MVC 工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755889/SpringMVC%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90_ewz7aa.png" alt=""></p>
+<h3 id="SpringMVC-处理请求过程："><a href="#SpringMVC-处理请求过程：" class="headerlink" title="SpringMVC 处理请求过程："></a>SpringMVC 处理请求过程：</h3><ol>
 <li>用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；</li>
-</ol>
-<ol>
 <li>DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。</li>
-</ol>
-<ol>
 <li>DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法）</li>
-</ol>
-<ol>
-<li>提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：</li>
-</ol>
-<pre><code>+ HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息
-+ 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等
-+ 数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等
-+ 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中
-</code></pre><ol>
+<li>提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：<ul>
+<li>HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息</li>
+<li>数据转换：对请求消息进行数据转换。如String转换成Integer、Double等</li>
+<li>数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等</li>
+<li>数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中</li>
+</ul>
+</li>
 <li>Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；</li>
-</ol>
-<ol>
 <li>根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ；</li>
-</ol>
-<ol>
 <li>ViewResolver 结合Model和View，来渲染视图</li>
-</ol>
-<ol>
 <li>将渲染结果返回给客户端。</li>
 </ol>
-<p><strong>Spring MVC工作流程图</strong><br><img src="../images/Spring MVC工作流程图.png" alt=""></p>
-<p><strong>UML时序图</strong><br><img src="../images/Spring MVC-UML.png" alt=""></p>
-<p><strong>组件说明：</strong></p>
-<p>以下组件通常使用框架提供实现：</p>
+<h3 id="Spring-MVC工作流程图"><a href="#Spring-MVC工作流程图" class="headerlink" title="Spring MVC工作流程图"></a>Spring MVC工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755888/Spring_MVC%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E5%9B%BE_lhxuct.png" alt=""></p>
+<h3 id="UML时序图"><a href="#UML时序图" class="headerlink" title="UML时序图"></a>UML时序图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755881/Spring_MVC-UML_sdj0tz.png" alt=""></p>
+<h4 id="组件说明"><a href="#组件说明" class="headerlink" title="组件说明:"></a>组件说明:</h4><p>以下组件通常使用框架提供实现：</p>
 <ul>
 <li>DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。</li>
 <li>HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。</li>
@@ -507,6 +495,14 @@
     </div>
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/SpringMVC/" rel="tag"># SpringMVC</a>
+          
+            <a href="/tags/SpringMVC执行流程/" rel="tag"># SpringMVC执行流程</a>
+          
+        </div>
       
 
       
@@ -572,8 +568,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/tc.jpg"
@@ -610,7 +615,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">8</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -661,6 +666,22 @@
       </section>
 
       
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring-MVC-工作流程图"><span class="nav-number">1.</span> <span class="nav-text">Spring MVC 工作流程图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SpringMVC-处理请求过程："><span class="nav-number">2.</span> <span class="nav-text">SpringMVC 处理请求过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring-MVC工作流程图"><span class="nav-number">3.</span> <span class="nav-text">Spring MVC工作流程图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UML时序图"><span class="nav-number">4.</span> <span class="nav-text">UML时序图</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#组件说明"><span class="nav-number">4.1.</span> <span class="nav-text">组件说明:</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
 
       
 
@@ -686,7 +707,7 @@
 
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
