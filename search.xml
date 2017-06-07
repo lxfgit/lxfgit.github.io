@@ -3,7 +3,7 @@
   <entry>
     <title><![CDATA[我和Hexo的秘密]]></title>
     <url>%2F2017%2F06%2F06%2F%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86%2F</url>
-    <content type="text"><![CDATA[劝君莫惜金缕衣，劝君惜取少年时2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。]]></content>
+    <content type="text"><![CDATA[劝君莫惜金缕衣，劝君惜取少年时2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。 流量统计下面的人数统计和访问统计是用的busuanzi 阅读次数文章的阅读次数用的是百度统计 图床本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。 站内搜索本站的站内搜索是采用hexo自带的local search]]></content>
       <categories>
         <category>Hexo</category>
       </categories>
@@ -28,7 +28,7 @@
   <entry>
     <title><![CDATA[Spark On YARN集群环境搭建]]></title>
     <url>%2F2017%2F06%2F02%2FSpark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%2F</url>
-    <content type="text"><![CDATA[尽人事，听天命 最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。 写在前面用户尽量使用带有root权限的用户，这里假设每个机器的用户是yh，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。 软件准备： jdk scala hadoop spark 这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异， 修改主机名我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为： 10.1.130.21 10.1.130.22 10.1.130.23 这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 vi /etc/hostname 21节点： 110.1.130.21 master 21节点： 110.1.130.22 salve1 21节点： 110.1.130.23 slave2 配置完主机名之后，需要重启生效。 然后就是修改每个节点的hosts文件，方法是vi /etc/hosts 每个节点都做同样的修改，添加如下配置： 12310.1.130.21 master10.1.130.22 salve110.1.130.23 slave2 配置完成后，需要互ping一下，检查是否成功 1yh@master$ ping slave1 #从master ping slave1，其他的类似 SSH免密登录如果机器没有安装ssh服务可以安装一下： 1sudo apt-get install openssh-server 免密登录，可以参考之间的方法 ssh免密登录 #]]></content>
+    <content type="text"><![CDATA[尽人事，听天命 最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。 写在前面用户尽量使用带有root权限的用户，这里假设每个机器的用户是yh，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。 软件准备： jdk scala hadoop spark 这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异， 修改主机名我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为： 10.1.130.21 10.1.130.22 10.1.130.23 这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 vi /etc/hostname 21节点： 110.1.130.21 master 21节点： 110.1.130.22 salve1 21节点： 110.1.130.23 slave2 配置完主机名之后，需要重启生效。 然后就是修改每个节点的hosts文件，方法是vi /etc/hosts 每个节点都做同样的修改，添加如下配置： 12310.1.130.21 master10.1.130.22 salve110.1.130.23 slave2 配置完成后，需要互ping一下，检查是否成功 1yh@master$ ping slave1 #从master ping slave1，其他的类似 SSH免密登录如果机器没有安装ssh服务可以安装一下： 1sudo apt-get install openssh-server 免密登录，可以参考之间的方法 SSH免密登录 #]]></content>
       <categories>
         <category>分布式系统</category>
       </categories>
