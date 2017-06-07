@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-06-06T13:58:07.000Z</updated>
+  <updated>2017-06-07T05:30:39.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,17 +16,54 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>致谢606实验室</title>
+    <link href="http://yoursite.com/2017/06/07/%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4/"/>
+    <id>http://yoursite.com/2017/06/07/致谢606实验室/</id>
+    <published>2017-06-07T05:30:16.000Z</published>
+    <updated>2017-06-07T05:30:39.000Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote class="blockquote-center"></blockquote>
+
+<a id="more"></a>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="随笔" scheme="http://yoursite.com/categories/%E9%9A%8F%E7%AC%94/"/>
+    
+    
+      <category term="EGOV" scheme="http://yoursite.com/tags/EGOV/"/>
+    
+  </entry>
+  
+  <entry>
     <title>我和Hexo的秘密</title>
     <link href="http://yoursite.com/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/"/>
     <id>http://yoursite.com/2017/06/06/我和hexo的秘密/</id>
     <published>2017-06-06T13:41:44.000Z</published>
-    <updated>2017-06-06T13:58:07.000Z</updated>
+    <updated>2017-06-07T05:29:20.000Z</updated>
     
     <content type="html"><![CDATA[<p><blockquote class="blockquote-center">劝君莫惜金缕衣，劝君惜取少年时</blockquote><br><strong>2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。</strong><br><a id="more"></a></p>
 <h3 id="流量统计"><a href="#流量统计" class="headerlink" title="流量统计"></a>流量统计</h3><p>下面的人数统计和访问统计是用的busuanzi</p>
 <h3 id="阅读次数"><a href="#阅读次数" class="headerlink" title="阅读次数"></a>阅读次数</h3><p>文章的阅读次数用的是百度统计</p>
 <h3 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h3><p>本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。</p>
 <h3 id="站内搜索"><a href="#站内搜索" class="headerlink" title="站内搜索"></a>站内搜索</h3><p>本站的站内搜索是采用hexo自带的local search</p>
+<h3 id="引用站内文章"><a href="#引用站内文章" class="headerlink" title="引用站内文章"></a>引用站内文章</h3><p>可以通过内置标签post_link实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125;</div></pre></td></tr></table></figure>
+<p>例如 引用hello.md</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello %&#125;</div></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello 你好 %&#125;</div></pre></td></tr></table></figure>
+<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><p>本地部署，在localhost：4000</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo s</div></pre></td></tr></table></figure>
+<p>清除无用的标签，索引，分类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo clean</div></pre></td></tr></table></figure>
+<p>更新部署</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo d -g</div></pre></td></tr></table></figure>
 ]]></content>
     
     <summary type="html">

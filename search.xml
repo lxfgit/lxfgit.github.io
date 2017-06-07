@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[致谢606实验室]]></title>
+    <url>%2F2017%2F06%2F07%2F%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4%2F</url>
+    <content type="text"><![CDATA[]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+      <tags>
+        <tag>EGOV</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[我和Hexo的秘密]]></title>
     <url>%2F2017%2F06%2F06%2F%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86%2F</url>
-    <content type="text"><![CDATA[劝君莫惜金缕衣，劝君惜取少年时2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。 流量统计下面的人数统计和访问统计是用的busuanzi 阅读次数文章的阅读次数用的是百度统计 图床本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。 站内搜索本站的站内搜索是采用hexo自带的local search]]></content>
+    <content type="text"><![CDATA[劝君莫惜金缕衣，劝君惜取少年时2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。 流量统计下面的人数统计和访问统计是用的busuanzi 阅读次数文章的阅读次数用的是百度统计 图床本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。 站内搜索本站的站内搜索是采用hexo自带的local search 引用站内文章可以通过内置标签post_link实现 1&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125; 例如 引用hello.md 1&#123;% post_link Hello %&#125; 或者 1&#123;% post_link Hello 你好 %&#125; 常用命令本地部署，在localhost：4000 1hexo s 清除无用的标签，索引，分类 1hexo clean 更新部署 1hexo d -g]]></content>
       <categories>
         <category>Hexo</category>
       </categories>
