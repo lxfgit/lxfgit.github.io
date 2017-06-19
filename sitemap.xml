@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</loc>
+    
+    <lastmod>2017-06-19T12:31:29.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2017/06/07/%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4/</loc>
     
     <lastmod>2017-06-07T08:34:50.000Z</lastmod>
@@ -33,13 +40,6 @@
     <loc>http://yoursite.com/about/index.html</loc>
     
     <lastmod>2017-06-03T15:15:17.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</loc>
-    
-    <lastmod>2017-06-03T03:40:55.000Z</lastmod>
     
   </url>
   
