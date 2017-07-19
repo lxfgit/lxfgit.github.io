@@ -99,7 +99,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/06/02/Spark-On-YARN集群环境搭建/index.html">
 <meta property="og:site_name" content="平民">
 <meta property="og:description" content="尽人事，听天命  最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。">
-<meta property="og:updated_time" content="2017-07-19T12:10:38.000Z">
+<meta property="og:updated_time" content="2017-07-19T12:13:30.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark On YARN集群环境搭建">
 <meta name="twitter:description" content="尽人事，听天命  最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。">
@@ -496,6 +496,8 @@
 <li><p>在<code>yarn-env.sh</code>中配置JAVA_HOME</p>
  <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
 </li>
+</ol>
+<ol>
 <li><p>在slaves中配置slave节点的ip或者host，</p>
  <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
 </li>
