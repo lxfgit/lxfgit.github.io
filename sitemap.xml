@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</loc>
+    
+    <lastmod>2017-07-19T10:36:27.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</loc>
     
     <lastmod>2017-06-19T12:31:29.000Z</lastmod>
@@ -19,13 +26,6 @@
     <loc>http://yoursite.com/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/</loc>
     
     <lastmod>2017-06-07T08:23:09.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</loc>
-    
-    <lastmod>2017-06-07T03:31:27.000Z</lastmod>
     
   </url>
   

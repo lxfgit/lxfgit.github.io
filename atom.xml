@@ -137,12 +137,12 @@
     <link href="http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
     <id>http://yoursite.com/2017/06/02/Spark-On-YARN集群环境搭建/</id>
     <published>2017-06-02T14:54:56.000Z</published>
-    <updated>2017-06-07T03:31:27.000Z</updated>
+    <updated>2017-07-19T10:36:27.000Z</updated>
     
     <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
 
 <p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
-<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是yh，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。</p>
+<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是spark，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了。</p>
 <p>软件准备：</p>
 <ul>
 <li>jdk</li>
@@ -173,7 +173,21 @@
 <h1 id="SSH免密登录"><a href="#SSH免密登录" class="headerlink" title="SSH免密登录"></a>SSH免密登录</h1><p>如果机器没有安装ssh服务可以安装一下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install openssh-server</div></pre></td></tr></table></figure>
 <p>免密登录，可以参考之间的方法 <a href="/2017/05/31/SSH免密登录/" title="SSH免密登录">SSH免密登录</a></p>
-<p># </p>
+<h1 id="Java和Scala的安装"><a href="#Java和Scala的安装" class="headerlink" title="Java和Scala的安装"></a>Java和Scala的安装</h1><p>从官网下载最新版[Java]{<a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html}和[Scala]{https://www.scala-lang.org/}就可以，它们的安装方式差不多，" target="_blank" rel="external">http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html}和[Scala]{https://www.scala-lang.org/}就可以，它们的安装方式差不多，</a></p>
+<h2 id="Java的安装"><a href="#Java的安装" class="headerlink" title="Java的安装"></a>Java的安装</h2><p>在你想要的安装的目录下解压：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tar -zxvf jdk-7u75-linux-x64.gz</div></pre></td></tr></table></figure>
+<p>修改环境变量<code>vi .bashrc</code>, 添加下列内容,注意这里spark是你的用户名，即在你的户用文件夹下。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> WORK_SPACE=/home/spark/workspace/</div><div class="line"><span class="built_in">export</span> JAVA_HOME=<span class="variable">$WORK_SPACE</span>/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> JRE_HOME=/home/spark/work/jdk1.7.0_75/jre</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$JAVA_HOME</span>/jre/bin:<span class="variable">$PATH</span></div><div class="line"><span class="built_in">export</span> CLASSPATH=<span class="variable">$CLASSPATH</span>:.:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</div></pre></td></tr></table></figure>
+<p>生效环境变量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
+<p>查看java版本，如果打印出如下版本信息，则说明安装成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ java -version </div><div class="line">java version <span class="string">"1.7.0_75"</span></div><div class="line">Java(TM) SE Runtime Environment (build 1.7.0_75-b13)</div><div class="line">Java HotSpot(TM) 64-Bit Server VM (build 24.75-b04, mixed mode)</div></pre></td></tr></table></figure>
+<h2 id="Scala的安装"><a href="#Scala的安装" class="headerlink" title="Scala的安装"></a>Scala的安装</h2><p>Scala 的安装也是一样的，解压，配置环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=<span class="variable">$WORK_SPACE</span>/scala-2.10.4</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$SCALA_HOME</span>/bin</div></pre></td></tr></table></figure>
+<p>生效环境变量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
+<p>查看Scala版本，如果打印出如下版本信息，则说明安装成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ scala -version       </div><div class="line">Scala code runner version 2.10.4 -- Copyright 2002-2013, LAMP/EPFL</div></pre></td></tr></table></figure>
 ]]></content>
     
     <summary type="html">
