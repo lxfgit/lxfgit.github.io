@@ -4,6 +4,28 @@
 
     
   <url>
+    <loc>http://yoursite.com/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/</loc>
+    <lastmod>2017-07-25T15:31:39.000Z</lastmod>
+    <data>
+        <display>
+        <title>我和Hexo的秘密</title>
+        <pubTime>2017-06-06T13:41:44.000Z</pubTime>
+        
+        <tag>hexo</tag>
+         
+        <tag>博客</tag>
+         
+         
+           
+             
+              <breadCrumb title="Hexo" url="http://yoursite.com/categories/Hexo/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</loc>
     <lastmod>2017-07-19T12:30:38.000Z</lastmod>
     <data>
@@ -61,28 +83,6 @@
            
              
               <breadCrumb title="随笔" url="http://yoursite.com/categories/%E9%9A%8F%E7%AC%94/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://yoursite.com/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/</loc>
-    <lastmod>2017-06-07T08:23:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>我和Hexo的秘密</title>
-        <pubTime>2017-06-06T13:41:44.000Z</pubTime>
-        
-        <tag>hexo</tag>
-         
-        <tag>博客</tag>
-         
-         
-           
-             
-              <breadCrumb title="Hexo" url="http://yoursite.com/categories/Hexo/"/>
           
         </display>
     </data>
