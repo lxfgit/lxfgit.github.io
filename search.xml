@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[Mysql主从数据库的配置]]></title>
+    <url>%2F2017%2F09%2F02%2FTomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE%2F</url>
+    <content type="text"><![CDATA[没有实力的发怒，是毫无意义的因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。]]></content>
+      <categories>
+        <category>数据库</category>
+        <category>Mysql</category>
+      </categories>
+      <tags>
+        <tag>Mysql</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[致谢606实验室]]></title>
     <url>%2F2017%2F06%2F07%2F%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4%2F</url>
     <content type="text"><![CDATA[国事如今谁倚仗，衣带一江而已。待续]]></content>
