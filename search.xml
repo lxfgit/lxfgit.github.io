@@ -1,508 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<search> 
-  
-    
-    <entry>
-      <title><![CDATA[Redis概述]]></title>
-      <url>/2017/09/13/Redis%E6%A6%82%E8%BF%B0/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">逃避未必能躲过，面对未必最难过</blockquote><br>在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。<br><a id="more"></a></p>
-<h2 id="NoSql的概述"><a href="#NoSql的概述" class="headerlink" title="NoSql的概述"></a>NoSql的概述</h2><h3 id="NoSql简述"><a href="#NoSql简述" class="headerlink" title="NoSql简述"></a>NoSql简述</h3><p>传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。</p>
-<h3 id="NoSql数据库模型简介"><a href="#NoSql数据库模型简介" class="headerlink" title="NoSql数据库模型简介"></a>NoSql数据库模型简介</h3><p>聚合模型：KV键值对,BSON，列族，图形</p>
-<h3 id="NoSql数据库的"><a href="#NoSql数据库的" class="headerlink" title="NoSql数据库的"></a>NoSql数据库的</h3>]]></content>
-      
-        <categories>
-            
-            <category> 数据库 </category>
-            
-            <category> Redis </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Redis </tag>
-            
-            <tag> 分布式缓存 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[Mysql主从数据库的配置]]></title>
-      <url>/2017/09/02/Tomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">没有实力的发怒，是毫无意义的</blockquote><br>因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。<br><a id="more"></a></p>
-]]></content>
-      
-        <categories>
-            
-            <category> 数据库 </category>
-            
-            <category> Mysql </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Mysql </tag>
-            
-            <tag> 主从复制 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[致谢606实验室]]></title>
-      <url>/2017/06/07/%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">国事如今谁倚仗，衣带一江而已。</blockquote><br>待续<br><a id="more"></a></p>
-]]></content>
-      
-        <categories>
-            
-            <category> 随笔 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> EGOV </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[我和Hexo的秘密]]></title>
-      <url>/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">劝君莫惜金缕衣，劝君惜取少年时</blockquote><br><strong>2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。</strong><br><a id="more"></a></p>
-<h3 id="流量统计"><a href="#流量统计" class="headerlink" title="流量统计"></a>流量统计</h3><p>下面的人数统计和访问统计是用的busuanzi</p>
-<h3 id="阅读次数"><a href="#阅读次数" class="headerlink" title="阅读次数"></a>阅读次数</h3><p>文章的阅读次数用的是百度统计和leanCloud</p>
-<h3 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h3><p>本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。</p>
-<h3 id="站内搜索"><a href="#站内搜索" class="headerlink" title="站内搜索"></a>站内搜索</h3><p>本站的站内搜索是采用hexo自带的local search</p>
-<h3 id="引用站内文章"><a href="#引用站内文章" class="headerlink" title="引用站内文章"></a>引用站内文章</h3><p>可以通过内置标签post_link实现</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125;</div></pre></td></tr></table></figure>
-<p>例如 引用hello.md</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello %&#125;</div></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello 你好 %&#125;</div></pre></td></tr></table></figure>
-<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><p>本地部署，在localhost：4000</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo s</div></pre></td></tr></table></figure>
-<p>清除无用的标签，索引，分类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo clean</div></pre></td></tr></table></figure>
-<p>更新部署</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo d -g</div></pre></td></tr></table></figure>
-]]></content>
-      
-        <categories>
-            
-            <category> Hexo相关 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> hexo </tag>
-            
-            <tag> 博客 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[SpringMVC的执行流程]]></title>
-      <url>/2017/06/05/SpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">三更灯火五更鸡，正是男儿读书时</blockquote><br><strong>在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。</strong><br><a id="more"></a></p>
-<h3 id="Spring-MVC-工作流程图"><a href="#Spring-MVC-工作流程图" class="headerlink" title="Spring MVC 工作流程图"></a>Spring MVC 工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755889/SpringMVC%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90_ewz7aa.png" alt=""></p>
-<h3 id="SpringMVC-处理请求过程："><a href="#SpringMVC-处理请求过程：" class="headerlink" title="SpringMVC 处理请求过程："></a>SpringMVC 处理请求过程：</h3><ol>
-<li>用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；</li>
-<li>DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。</li>
-<li>DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法）</li>
-<li>提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：<ul>
-<li>HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息</li>
-<li>数据转换：对请求消息进行数据转换。如String转换成Integer、Double等</li>
-<li>数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等</li>
-<li>数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中</li>
-</ul>
-</li>
-<li>Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；</li>
-<li>根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ；</li>
-<li>ViewResolver 结合Model和View，来渲染视图</li>
-<li>将渲染结果返回给客户端。</li>
-</ol>
-<h3 id="Spring-MVC工作流程图"><a href="#Spring-MVC工作流程图" class="headerlink" title="Spring MVC工作流程图"></a>Spring MVC工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755888/Spring_MVC%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E5%9B%BE_lhxuct.png" alt=""></p>
-<h3 id="UML时序图"><a href="#UML时序图" class="headerlink" title="UML时序图"></a>UML时序图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755881/Spring_MVC-UML_sdj0tz.png" alt=""></p>
-<h4 id="组件说明"><a href="#组件说明" class="headerlink" title="组件说明:"></a>组件说明:</h4><p>以下组件通常使用框架提供实现：</p>
-<ul>
-<li>DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。</li>
-<li>HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。</li>
-<li>HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。</li>
-<li>ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。</li>
-</ul>
-]]></content>
-      
-        <categories>
-            
-            <category> Web开发框架 </category>
-            
-            <category> Spring </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> SpringMVC </tag>
-            
-            <tag> SpringMVC执行流程 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[Spark On YARN集群环境搭建]]></title>
-      <url>/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</url>
-      <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
-
-<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
-<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是spark，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了，每个节点上的用户都是一样的，安装的路径也必须是一致的。</p>
-<h1 id="软件准备："><a href="#软件准备：" class="headerlink" title="软件准备："></a>软件准备：</h1><ul>
-<li>Jdk</li>
-<li>Scala</li>
-<li>Hadoop</li>
-<li>Spark</li>
-</ul>
-<p>这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异，</p>
-<h1 id="修改主机名"><a href="#修改主机名" class="headerlink" title="修改主机名"></a>修改主机名</h1><p>我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为：</p>
-<blockquote>
-<p>10.1.130.21<br>10.1.130.22<br>10.1.130.23</p>
-</blockquote>
-<p>这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 <code>vi /etc/hostname</code></p>
-<p>21节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div></pre></td></tr></table></figure>
-<p>22节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.22  salve1</div></pre></td></tr></table></figure>
-<p>23节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
-<p>配置完主机名之后，需要重启生效。</p>
-<p>然后就是修改每个节点的hosts文件，方法是<code>vi /etc/hosts</code></p>
-<p>每个节点都做同样的修改，添加如下配置：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div><div class="line">10.1.130.22  salve1</div><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
-<p>配置完成后，需要互ping一下，检查是否成功，</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">spark@master$ ping slave1 <span class="comment">#从master ping slave1，其他的类似</span></div></pre></td></tr></table></figure>
-<h1 id="SSH免密登录"><a href="#SSH免密登录" class="headerlink" title="SSH免密登录"></a>SSH免密登录</h1><p>如果机器没有安装ssh服务可以安装一下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install openssh-server</div></pre></td></tr></table></figure>
-<p>免密登录，可以参考之间的方法 <a href="/2017/05/31/SSH免密登录/" title="SSH免密登录">SSH免密登录</a></p>
-<h1 id="Java和Scala的安装"><a href="#Java和Scala的安装" class="headerlink" title="Java和Scala的安装"></a>Java和Scala的安装</h1><p><strong>以下所有的安装都是在master节点上进行的。</strong></p>
-<p>从官网下载最新版<a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank" rel="external">Java</a>和<a href="https://www.scala-lang.org/" target="_blank" rel="external">Scala</a>就可以，它们的安装方式差不多，</p>
-<h2 id="Java的安装"><a href="#Java的安装" class="headerlink" title="Java的安装"></a>Java的安装</h2><p>在你想要的安装的目录下解压,这里我们在自己用户下新建一个文件夹叫做app，注意不要用<code>sudo</code>来建立,直接在每一个节点下<code>mkdir app</code>就行了，将源文件放在app中，然后解压。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> app</div><div class="line">tar -zxvf jdk-7u75-linux-x64.gz</div></pre></td></tr></table></figure>
-<p>修改环境变量<code>vi .bashrc</code>, 添加下列内容,注意这里spark是你的用户名，即在你的户用文件夹下。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> WORK_SPACE=/home/spark/app/</div><div class="line"><span class="built_in">export</span> JAVA_HOME=<span class="variable">$WORK_SPACE</span>/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> JRE_HOME=/home/spark/work/jdk1.7.0_75/jre</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$JAVA_HOME</span>/jre/bin:<span class="variable">$PATH</span></div><div class="line"><span class="built_in">export</span> CLASSPATH=<span class="variable">$CLASSPATH</span>:.:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</div></pre></td></tr></table></figure>
-<p>生效环境变量</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
-<p>查看java版本，如果打印出如下版本信息，则说明安装成功</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ java -version </div><div class="line">java version <span class="string">"1.7.0_75"</span></div><div class="line">Java(TM) SE Runtime Environment (build 1.7.0_75-b13)</div><div class="line">Java HotSpot(TM) 64-Bit Server VM (build 24.75-b04, mixed mode)</div></pre></td></tr></table></figure>
-<h2 id="Scala的安装"><a href="#Scala的安装" class="headerlink" title="Scala的安装"></a>Scala的安装</h2><p>Scala 的安装也是一样的，同样解压在app文件夹下，配置环境变量：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=<span class="variable">$WORK_SPACE</span>/scala-2.10.4</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$SCALA_HOME</span>/bin</div></pre></td></tr></table></figure>
-<p>生效环境变量</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
-<p>查看Scala版本，如果打印出如下版本信息，则说明安装成功</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ scala -version       </div><div class="line">Scala code runner version 2.10.4 -- Copyright 2002-2013, LAMP/EPFL</div></pre></td></tr></table></figure>
-<p>至此，我们的Java和Scala的安装工作就结束了，我们需要将安装的目录分发到slave1和slave2中，同时slave1和slave2的环境变量也需要像master中一样配置.<br>分发</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/jdk1.7.0_75 spark@slave1:~/app/</div><div class="line">scp -r ~/app/jdk1.7.0_75 spark@slave2:~/app/</div><div class="line">scp -r ~/app/scala-2.10.4 spark@slave1:~/app/</div><div class="line">scp -r ~/app/scala-2.10.4 spark@slave1:~/app/</div></pre></td></tr></table></figure>
-<p>修改slave1和slave2环境的环境变量，可以直接复制。然后在slave1和slave2中分别测试一下有没有安装成功。</p>
-<h1 id="安装配置-Hadoop-YARN"><a href="#安装配置-Hadoop-YARN" class="headerlink" title="安装配置 Hadoop YARN"></a>安装配置 Hadoop YARN</h1><h2 id="下载解压"><a href="#下载解压" class="headerlink" title="下载解压"></a>下载解压</h2><p>从<a href="http://hadoop.apache.org/#Download+Hadoop" target="_blank" rel="external">官网</a>下载hadoop,这里我们以 hadoop2.6.0 版本为例。</p>
-<p>同样我们在~/app中解压</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tar -zxvf hadoop-2.6.0.tar.gz</div></pre></td></tr></table></figure>
-<h2 id="配置Hadoop"><a href="#配置Hadoop" class="headerlink" title="配置Hadoop"></a>配置Hadoop</h2><p>同样我们可以在 <code>.bashrc</code>中配置Hadoop的环境变量</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> HADOOP_HOME=/home/spark/app/hadoop-2.6.0</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$HADOOP_HOME</span>/bin</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$HADOOP_HOME</span>/sbin</div></pre></td></tr></table></figure>
-<p>需要配置的配置文件都在hadoop根目录下的<code>etc/hadoop</code>中，一共需要配置7个文件：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">hadoop-env.sh</div><div class="line">yarn-env.sh</div><div class="line">slaves</div><div class="line">core-site.xml</div><div class="line">hdfs-site.xml</div><div class="line">maprd-site.xml</div><div class="line">yarn-site.xml</div></pre></td></tr></table></figure>
-<ol>
-<li><p>在<code>hadoop-env.sh</code>中配置JAVA_HOME</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>yarn-env.sh</code>中配置JAVA_HOME</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
-</li>
-<li><p>在slaves中配置slave节点的ip或者host，</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改core-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;fs.defaultFS&lt;/name&gt;</div><div class="line">        &lt;value&gt;hdfs://master:9000/&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">         &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</div><div class="line">         &lt;value&gt;file:/home/spark/workspace/hadoop-2.6.0/tmp&lt;/value&gt;</div><div class="line">         &lt;description&gt;Abase <span class="keyword">for</span> other temporary directories.&lt;/description&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改hdfs-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.namenode.secondary.http-address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:9001&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;</div><div class="line">        &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/name&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;</div><div class="line">        &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/data&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.replication&lt;/name&gt;</div><div class="line">        &lt;value&gt;3&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;dfs.namenode.datanode.registration.ip-hostname-check&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改mapred-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</div><div class="line">        &lt;value&gt;yarn&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改yarn-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;</div><div class="line">        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt;</div><div class="line">        &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.nodemanager.pmem-check-enabled&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.nodemanager.vmem-check-enabled&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt;</div><div class="line">    	&lt;value&gt;amdnode0&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8032&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8030&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8035&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.admin.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8033&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.webapp.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8088&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>这是我自己的配置，大家可以根据自己的需要修改，将配置好的hadoop-2.6.0文件夹分发给所有slaves吧。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/hadoop-2.6.0 spark@slave1:~/app/</div><div class="line">scp -r ~/app/hadoop-2.6.0 spark@slave2:~/app/</div></pre></td></tr></table></figure>
-<h2 id="启动Hadoop"><a href="#启动Hadoop" class="headerlink" title="启动Hadoop"></a>启动Hadoop</h2><p>在 master 上执行以下操作，就可以启动 hadoop 了,因为我们配置了Hadoop的环境变量所以就可以在任意目录下启动Hadoop了。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">start-dfs.sh               <span class="comment">#启动dfs,如果没有配置的话就是sbin/start-dfs.sh                </span></div><div class="line">start-yarn.sh              <span class="comment">#启动yarn,如果没有配置的话就是sbin/start-yarn.sh</span></div></pre></td></tr></table></figure>
-<h2 id="验证-Hadoop-是否安装成功"><a href="#验证-Hadoop-是否安装成功" class="headerlink" title="验证 Hadoop 是否安装成功"></a>验证 Hadoop 是否安装成功</h2><p>可以通过jps命令查看各个节点启动的进程是否正常。在 master 上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ jps  <span class="comment">#run on master</span></div><div class="line">3407 SecondaryNameNode</div><div class="line">3218 NameNode</div><div class="line">3552 ResourceManager</div><div class="line">3910 Jps</div></pre></td></tr></table></figure>
-<p>在每个slave上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ jps   <span class="comment">#run on slaves</span></div><div class="line">2072 NodeManager</div><div class="line">2213 Jps</div><div class="line">1962 DataNode</div></pre></td></tr></table></figure>
-<p>或者在浏览器中输入 <a href="http://master:8088" target="_blank" rel="external">http://master:8088</a> ，应该有 hadoop 的管理界面出来了，并能看到 slave1 和 slave2 节点。也可以通过 </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
-<p>查看节点使用情况。</p>
-<h1 id="Spark安装"><a href="#Spark安装" class="headerlink" title="Spark安装"></a>Spark安装</h1><h2 id="下载解压-1"><a href="#下载解压-1" class="headerlink" title="下载解压"></a>下载解压</h2><p>进入官方下载地址下载最新版<a href="https://spark.apache.org/" target="_blank" rel="external">Spark</a>。我下载的是 spark-1.3.0-bin-hadoop2.4.tgz。</p>
-<p>在~/app目录下解压</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">tar -zxvf spark-1.3.0-bin-hadoop2.4.tgz</div><div class="line">mv spark-1.3.0-bin-hadoop2.4 spark-1.3.0    <span class="comment">#如果觉得原来的文件名太长了，可以修改下</span></div></pre></td></tr></table></figure>
-<h2 id="配置-Spark"><a href="#配置-Spark" class="headerlink" title="配置 Spark"></a>配置 Spark</h2><p>spark的配置文件在spark根目录下的<code>conf</code>中, Spark需要修改的配置文件只有两个：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">spark-env.sh </div><div class="line">slaves</div></pre></td></tr></table></figure>
-<ol>
-<li><p>在conf目录下将<code>spark-env.sh.template</code>复制成<code>spark-env.sh</code></p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> ~/app/spark-1.3.0/conf    <span class="comment">#进入spark配置目录</span></div><div class="line">cp spark-env.sh.template spark-env.sh   <span class="comment">#从配置模板复制</span></div><div class="line">vi spark-env.sh     <span class="comment">#添加配置内容</span></div></pre></td></tr></table></figure>
-<p> 在spark-env.sh末尾添加以下内容（这是我的配置，你可以自行修改）：</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=/home/spark/app/scala-2.10.4</div><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> HADOOP_HOME=/home/spark/app/hadoop-2.6.0</div><div class="line"><span class="built_in">export</span> HADOOP_CONF_DIR=<span class="variable">$HADOOP_HOME</span>/etc/hadoop</div><div class="line">SPARK_MASTER_IP=master</div><div class="line">SPARK_LOCAL_DIRS=/home/spark/app/spark-1.3.0</div><div class="line">SPARK_DRIVER_MEMORY=1G</div></pre></td></tr></table></figure>
-<p> 注：在设置Worker进程的CPU个数和内存大小，要注意机器的实际硬件条件，如果配置的超过当前Worker节点的硬件条件，Worker进程会启动失败。</p>
-</li>
-<li><p>修改slaves文件下slaves的主机名：</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>将配置好的spark-1.3.0文件夹分发给所有slaves吧</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/spark-1.3.0 spark@slave1:~/workspace/</div><div class="line">scp -r ~/app/spark-1.3.0 spark@slave2:~/workspace/</div></pre></td></tr></table></figure>
-<h2 id="启动Spark"><a href="#启动Spark" class="headerlink" title="启动Spark"></a>启动Spark</h2><p>在spark的根目录下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sbin/start-all.sh</div></pre></td></tr></table></figure>
-<p>验证 Spark 是否安装成功<br>用jps检查，在 master 上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">$ jps</div><div class="line">7949 Jps</div><div class="line">7328 SecondaryNameNode</div><div class="line">7805 Master</div><div class="line">7137 NameNode</div><div class="line">7475 ResourceManager</div></pre></td></tr></table></figure>
-<p>在 slave 上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$jps</span></div><div class="line">3132 DataNode</div><div class="line">3759 Worker</div><div class="line">3858 Jps</div><div class="line">3231 NodeManager</div></pre></td></tr></table></figure>
-<p>也可以进入Spark的Web管理页面： <a href="http://master:8080" target="_blank" rel="external">http://master:8080</a></p>
-<p><strong>注意：三个节点的防火墙要关掉，不然很容易出错，这里中间很多的细节都没有涉及到，只是个大概的流程，我相信，每个人刚学的时候都不会一次性的成功，但是者未必不是好事，有些坑是需要踩过才知道，这里有很多的坑，祝大家早日脱坑。</strong></p>
-]]></content>
-      
-        <categories>
-            
-            <category> 分布式系统 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Spark </tag>
-            
-            <tag> YARN </tag>
-            
-            <tag> 分布式环境搭建 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[SSH免密登录]]></title>
-      <url>/2017/05/31/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br><a id="more"></a></p>
-<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>假设有两台机器他们的IP和主机名是：<br><em>M1-IP</em>：<code>10.1.130.2</code>         <em>主机名</em>：<code>m1</code><br><em>M2-IP</em>：<code>10.1.130.3</code>         <em>主机名</em>：<code>m2</code><br>如果想要更改主机名，可以在每台机器的<code>/etc/hostname</code>中更改，但是需要<strong>重启生效</strong>。</p>
-<h3 id="映射主机名"><a href="#映射主机名" class="headerlink" title="映射主机名"></a>映射主机名</h3><p>每个机器都进入 <code>/etc/hosts</code> ，并添加所有的主机名和IP映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">10.1.130.2   m1</div><div class="line">10.1.130.3   m2</div></pre></td></tr></table></figure></p>
-<h3 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h3><p>执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 <code>~/.ssh</code> 下面，名为<code>id_rsa.pub</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure></p>
-<h3 id="汇总公钥"><a href="#汇总公钥" class="headerlink" title="汇总公钥"></a>汇总公钥</h3><ul>
-<li><p>汇总公钥至同一机器（为了方面下一步），假如在<code>m2</code>中将公钥复制到<code>m1</code>。</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2</div></pre></td></tr></table></figure>
-</li>
-<li><p>将公钥合并至 <code>authorized_keys</code></p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat id_rsa.pub* &gt;&gt;authorized_keys</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="分发公钥"><a href="#分发公钥" class="headerlink" title="分发公钥"></a>分发公钥</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp authorized_keys m2@10.1.1130.3:~/.ssh</div></pre></td></tr></table></figure>
-<p>大工告成</p>
-]]></content>
-      
-        <categories>
-            
-            <category> Linux </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> 免密登录 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[HDFS常用命令]]></title>
-      <url>/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
-      <content type="html"><![CDATA[<blockquote class="blockquote-center">衣带渐宽终不悔，为伊消得人憔悴</blockquote>
-
-<h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
-<li>建立目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   <span class="comment">#加上-p是所有目录都要建立</span></div><div class="line">eadoop dfs -mkdir  /user/hadoop/examples1    <span class="comment">#建立examples1目录</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<a id="more"></a> 
-<ul>
-<li>删除目录<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -rm -r /user/hadoop/examples    #加上-r，删除examples</div><div class="line">hadoop dfs -rm -r /user                    #删除user目录</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<ul>
-<li><p>列出HDFS下的文件(夹)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -ls /                 #查看hdfs根目录下的文件夹(文件)</div><div class="line">hadoop dfs -ls /user/data        #查看某个目录下的文件夹(文件)</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件内容</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -cat /user/data/in/word.txt     #查看文件内容，必须是一个文件，不能时目录</div></pre></td></tr></table></figure>
-</li>
-<li><p>将hdfs上的文件(夹)复制到本地的文件系统</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -get /user/data   rename                                                      #将data目录复制到当前执行该命令的本地文件系统，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data  rename                                     #将data目录复制到本地指定目录下，并重命名为rename</div><div class="line"></div><div class="line">hadoop dfs -get /user/data  /home/user/data/core-site.xml  /home/user/data/rename.xml    #将core-site.xml复制到本地指定目录下，并重命名为rename.xml</div><div class="line"></div><div class="line">hadoop dfs -getmerger /user/data/in merge.xml                                            #将hdfs中某个目录下的的文件合并并下载到本地当前目录</div></pre></td></tr></table></figure>
-</li>
-<li><p>将本地文件系统上传到hdfs上</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -put file /user/data</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="管理与更新"><a href="#管理与更新" class="headerlink" title="管理与更新"></a>管理与更新</h2><ul>
-<li><p>执行基本信息, 查看HDFS的基本统计信息:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
-</li>
-<li><p>HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop$bin/start-balancer.sh</div></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-      
-        <categories>
-            
-            <category> 分布式系统 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> hadoop </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[Git常用命令]]></title>
-      <url>/2017/05/31/Git%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
-      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">优秀的人，不是不合群，而是他们合群的人里面没有你</blockquote></p>
-<h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><ul>
-<li>初始化一个版本仓库<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git init</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<a id="more"></a>
-<ul>
-<li><p>Clone远程版本库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">clone</span> git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
-</li>
-<li><p>添加远程版本库origin，语法为 git remote add [shortname] [url]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote add origin git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看远程仓库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote -v</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="提交修改"><a href="#提交修改" class="headerlink" title="提交修改"></a>提交修改</h2><ul>
-<li><p>添加当前修改的文件到暂存区</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add .</div></pre></td></tr></table></figure>
-</li>
-<li><p>如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add -u</div></pre></td></tr></table></figure>
-</li>
-<li><p>提交你的修改</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"你的注释"</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git push origin master</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件状态</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git status</div></pre></td></tr></table></figure>
-</li>
-<li><p>跟踪新文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>从当前跟踪列表移除文件，并完全删除</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>仅在暂存区删除，保留文件在当前目录，不再跟踪</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm –cached readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>重命名文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git mv reademe.txt readme</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看提交的历史记录</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">log</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>修改最后一次提交注释的，利用–amend参数</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit --amend</div></pre></td></tr></table></figure>
-</li>
-<li><p>忘记提交某些修改，下面的三条命令只会得到一个提交</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"add readme.txt"</span></div><div class="line">git add readme_forgotten</div><div class="line">git commit –amend</div></pre></td></tr></table></figure>
-</li>
-<li><p>假设你已经使用<code>git add .</code>，将修改过的文件a、b加到暂存区<br>现在你只想提交a文件，不想提交b文件，应该这样</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git reset HEAD b</div></pre></td></tr></table></figure>
-</li>
-<li><p>取消对文件的修改</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –- readme.txt</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h2><ul>
-<li><p>创建一个分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>切换工作目录到iss53</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>将上面的命令合在一起，创建iss53分支并切换到iss53</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout –b iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>合并iss53分支，当前工作目录为master</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git merge iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>合并完成后，没有出现冲突，删除iss53分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch –d iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>拉去远程仓库的数据，语法为 git fetch [remote-name]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git fetch</div></pre></td></tr></table></figure>
-</li>
-<li><p>fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git pull</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看远程仓库的信息</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote show origin</div></pre></td></tr></table></figure>
-</li>
-<li><p>建立本地的dev分支追踪远程仓库的develop分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –b dev origin/develop+ <span class="comment">#分支管理</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-      
-        <categories>
-            
-            <category> Git </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> git </tag>
-            
-        </tags>
-        
-    </entry>
-    
-  
-  
+<search>
+  <entry>
+    <title><![CDATA[Redis概述]]></title>
+    <url>%2F2017%2F09%2F13%2FRedis%E6%A6%82%E8%BF%B0%2F</url>
+    <content type="text"><![CDATA[逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。 NoSql的概述NoSql简述传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。 NoSql数据库模型简介聚合模型：KV键值对,BSON，列族，图形 在分布式数据库中CAP原理CAP+BASE传统的ACID分别是什么1234A (Atomicity) 原子性C (Consistency) 一致性I (Isolation) 独立性D (Durability) 持久性 分布式数据库CAP1234567C:Consistency（强一致性）A:Availability（可用性）P:Partition tolerance（分区容错性）CA: 传统Oracle数据库 AP: 大多数网站架构的选择 CP: Redis、Mongodb CAP的3进2CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，最多只能同时较好的满足两个。因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类： 123CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。CP - 满足一致性，分区容忍必的系统，通常性能不是特别高。AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。 BASEBASE就是为了解决关系数据库强一致性引起的问题而引起的可用性降低而提出的解决方案。BASE其实是下面三个术语的缩写：123基本可用（Basically Available）软状态（Soft state）最终一致（Eventually consistent） 它的思想是通过让系统放松对某一时刻数据一致性的要求来换取系统整体伸缩性和性能上改观。为什么这么说呢，缘由就在于大型系统往往由于地域分布和极高性能的要求，不可能采用分布式事务来完成这些指标，要想获得这些指标，我们必须采用另外一种方式来完成，这里BASE就是解决这个问题的办法. NoSql数据库四大分类 KV键值：典型介绍 123新浪：BerkeleyDB+redis美团：redis+tair阿里、百度：memcache+redis 文档型数据库(bson格式比较多)：典型介绍 12CouchDBMongoDB 列存储数据库 123CassandraHBase分布式文件系统 图关系数据库它不是放图形的，放的是关系比如:朋友圈社交网络、广告推荐系统、社交网络，推荐系统等。专注于构建关系图谱 12Neo4JInfoGrid Redis入门介绍入门概述1.是什么Redis:REmote DIctionary Server(远程字典服务器)是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key/value)分布式内存数据库，基于内存运行,并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一,也被人们称为数据结构服务器。Redis 与其他 key - value 缓存产品有以下三个特点: Redis支持数据的持久化，可以将内存中的数据保持在磁盘中，重启的时候可以再次加载进行使用。 Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储。 Redis支持数据的备份，即master-slave模式的数据备份。 2.能干嘛 内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务 取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面 模拟类似于HttpSession这种需要设定过期时间的功能 发布、订阅消息系统 定时器、计数器 3.安装Linux版安装下载获得redis-3.0.4.tar.gz后将它放入我们的Linux目录/opt/opt目录下，解压命令:tar -zxvf redis-3.0.4.tar.gz解压完成后出现文件夹：redis-3.0.4进入目录:cd redis-3.0.4在redis-3.0.4目录下执行make命令 4.启动修改redis.conf文件将里面的daemonize no 改成 yes，让服务在后台启动将默认的redis.conf拷贝到自己定义好的一个路径下，比如/myconf启动: redis-server /myconf/redis.conf, redis-cli连通测试:/usr/local/bin目录下运行redis-server，运行拷贝出存放了自定义conf文件目录下的redis.conf文件 5.关闭12单实例关闭：redis-cli shutdown多实例关闭，指定端口关闭:redis-cli -p 6379 shutdown 6.Redis启动后杂项基础知识讲解 单进程:单进程模型来处理客户端的请求。对读写等事件的响应,是通过对epoll函数的包装来做到的。Redis的实际处理速度完全依靠主进程的执行效率,epoll是Linux内核为处理大批量文件描述符而作了改进的epoll，是Linux下多路复用IO接口select/poll的增强版本，它能显著提高程序在大量并发连接中只有少量活跃的情况下的系统CPU利用率。 默认16个数据库，类似数组下表从零开始，初始默认使用零号库 select命令切换数据库 dbsize查看当前数据库的key的数量 flushdb：清空当前库 Flushall:通杀全部库 统一密码管理，16个库都是同样密码，要么都OK要么一个也连接不上 Redis索引都是从零开始 为什么默认端口是6379 Redis数据类型一、Redis的五大数据类型1.string（字符串） string是redis最基本的类型，你可以理解成与Memcached一模一样的类型，一个key对应一个value。 string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。 string类型是Redis最基本的数据类型，一个redis中字符串value最多可以是512M 2.hash（哈希，类似java里的Map） Redis hash 是一个键值对集合。 Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象。 类似Java里面的Map 3.list（列表） Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素导列表的头部（左边）或者尾部（右边）。 底层实际是个链表 4.set（集合） Redis的Set是string类型的无序集合。它是通过HashTable实现实现的， 5.zset(sorted set：有序集合) Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。不同的是每个元素都会关联一个double类型的分数。 redis正是通过分数来为集合中的成员进行从小到大的排序。zset的成员是唯一的,但分数(score)却可以重复。 二、常用命令（官网常用命令)键（keys）123456keys * 获取当前库的全部键exists key的名字，判断某个key是否存在move key db ---&gt;当前库就没有了，被移除了expire key 秒钟：为给定的key设置过期时间ttl key 查看还有多少秒过期，-1表示永不过期，-2表示已过期type key 查看你的key是什么类型 字符串（String）它是单值单value的12345678Incr/decr/incrby/decrby,一定要是数字才能进行加减getrange:获取指定区间范围内的值，类似between......and的关系，从零到负一表示全部setrange:setrange设置指定区间范围内的值，格式是setrange key值 具体值setex(set with expire)键秒值/setnx(set if not exist)mset:同时设置一个或多个 key-value 对mget:获取所有(一个或多个)给定 key 的值msetnx:同时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在getset(先get再set) Redis列表(List)它是单值多value12345678lpop/rpoplindex，按照索引下标获得元素(从上到下)llenlrem key 删N个valueltrim key 开始index 结束index，截取指定范围的值后再赋值给keyrpoplpush 源列表 目的列表lset key index valuelinsert key before/after 值1 值2 性能总结:它是一个字符串链表，left、right都可以插入添加；如果键不存在，创建新的链表；如果键已存在，新增内容；如果值全移除，对应的键也就消失了。链表的操作无论是头和尾效率都极高，但假如是对中间元素进行操作，效率就很惨淡了。 Redis集合(Set)它是单值多value12345678scard，获取集合里面的元素个数srem key value 删除集合中元素srandmember key 某个整数(随机出几个数)：如果超过最大数量就全部取出，如果写的值是负数，比如-3 ，表示需要取出3个，但是可能会有重复值。spop key 随机出栈smove key1 key2 在key1里某个值 作用是将key1里的某个值赋给key2差集：sdiff--&gt;在第一个set里面而不在后面任何一个set里面的项交集：sinter--&gt;在第一个set里面并且在后面任何一个set里面的项并集：sunion--&gt;在第一个set里面或者在后面任何一个set里面的项 Redis哈希(Hash)KV模式不变，但V是一个键值对12345hlenhexists key 在key里面的某个值的keyhkeys/hvalshincrby/hincrbyfloathsetnx Redis有序集合Zset(sorted set)在set基础上，加一个score值。之前set是k1 v1 v2 v3，现在zset是k1 score1 v1 score2 v212345678zrem key 某score下对应的value值，作用是删除元素zcard ：获取集合中元素个数zcount ：获取分数区间内元素个数，zcount key 开始分数区间 结束分数区间zrank： 获取value在zset中的下标位置zscore：按照值获得对应的分数zrevrank key values值，作用是逆序获得下标值zrevrangezrevrangebyscore key 结束score 开始score 解析配置文件redis.conf GENERAL通用 12345678910111213daemonize:默认为no，改为yespidfileporttcp-backlog:设置tcp的backlog，backlog其实是一个连接队列，backlog队列总和=未完成三次握手队列 + 已经完成三次握手队列。在高并发环境下你需要一个高backlog值来避免慢客户端连接问题。注意Linux内核会将这个值减小到/proc/sys/net/core/somaxconn的值，所以需要确认增大somaxconn和tcp_max_syn_backlog两个值来达到想要的效果timeoutbind tcp-keepalive:单位为秒，如果设置为0，则不会进行Keepalive检测，建议设置成60 loglevel:日志级别logfile：日志文件名syslog-enabled：是否把日志输出到syslog中syslog-ident：指定syslog里的日志标志syslog-facility：指定syslog设备，值可以是USER或LOCAL0-LOCAL7databases SNAPSHOTTING快照 12345678Save save 秒钟 写操作次数 禁用stop-writes-on-bgsave-errorrdbcompressionrdbchecksumdbfilenamedir REPLICATION复制 SECURITY安全访问密码的查看、设置和取消 LIMITS限制 12345678910maxclients：最大客户端个数maxmemory：允许最大使用内存maxmemory-policy （1）volatile-lru：使用LRU算法移除key，只对设置了过期时间的键 （2）allkeys-lru：使用LRU算法移除key （3）volatile-random：在过期集合中移除随机的key，只对设置了过期时间的键 （4）allkeys-random：移除随机的key （5）volatile-ttl：移除那些TTL值最小的key，即那些最近要过期的key （6）noeviction：不进行移除。针对写操作，只是返回错误信息maxmemory-samples：设置样本数量，LRU算法和最小TTL算法都并非是精确的算法，而是估算值，所以你可以设置样本的大小，redis默认会检查这么多个key并选择其中LRU的那个 APPEND ONLY MODE追加 123456789appendonly：是否打开appendfilename：文件名称appendfsync：追加策略 always：同步持久化 每次发生数据变更会被立即记录到磁盘 性能较差但数据完整性比较好 everysec：出厂默认推荐，异步操作，每秒记录 如果一秒内宕机，有数据丢失 no：不追加，不推荐no-appendfsync-on-rewrite：重写时是否可以运用Appendfsync，用默认no即可，保证数据安全性。 auto-aof-rewrite-min-size：设置重写的基准值 auto-aof-rewrite-percentage：设置重写的基准值 常见配置redis.conf介绍总结 Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程 1daemonize no 当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定 1pidfile /var/run/redis.pid 指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字 1port 6379 绑定的主机地址 1bind 127.0.0.1 当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能 1timeout 300 指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose 1loglevel verbose 日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null 1logfile stdout 设置数据库的数量，默认数据库为0，可以使用SELECT 命令在连接上指定数据库id 1databases 16 指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合分别表示900秒（15分钟）内有1个更改，300秒（5分钟)内有10个更改以及60秒内有10000个更改。 12345save &lt;seconds&gt; &lt;changes&gt;Redis默认配置文件中提供了三个条件：save 900 1save 300 10save 60 10000 指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大 1rdbcompression yes 指定本地数据库文件名，默认值为dump.rdb 1dbfilename dump.rdb 指定本地数据库存放目录 1dir ./ 设置当本机为slav服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步 1slaveof &lt;masterip&gt; &lt;masterport&gt; 当master服务设置了密码保护时，slav服务连接master的密码 1masterauth &lt;master-password&gt; 设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过AUTH 命令提供密码，默认关闭 1requirepass foobared 设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置 maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息 1maxclients 128 指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区 1maxmemory &lt;bytes&gt; 指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no 1appendonly no 指定更新日志文件名，默认为appendonly.aof 1appendfilename appendonly.aof 指定更新日志条件，共有3个可选值： 1234no：表示等操作系统进行数据缓存同步到磁盘（快） always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） everysec：表示每秒同步一次（折衷，默认值）appendfsync everysec 指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制） 1vm-enabled no 虚拟内存文件路径，默认值为/tmp/redis.swap，不可多个Redis实例共享 1vm-swap-file /tmp/redis.swap 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0 1vm-max-memory 0 Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值 1vm-page-size 32 设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。 1vm-pages 134217728 设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4 1vm-max-threads 4 设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启 1glueoutputbuf yes 指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法 12hash-max-zipmap-entries 64hash-max-zipmap-value 512 指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍） 1activerehashing yes 指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件 1include /path/to/local.conf]]></content>
+      <categories>
+        <category>数据库</category>
+        <category>Redis</category>
+      </categories>
+      <tags>
+        <tag>Redis</tag>
+        <tag>分布式缓存</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Mysql主从数据库的配置]]></title>
+    <url>%2F2017%2F09%2F02%2FTomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE%2F</url>
+    <content type="text"><![CDATA[没有实力的发怒，是毫无意义的因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。]]></content>
+      <categories>
+        <category>数据库</category>
+        <category>Mysql</category>
+      </categories>
+      <tags>
+        <tag>Mysql</tag>
+        <tag>主从复制</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[致谢606实验室]]></title>
+    <url>%2F2017%2F06%2F07%2F%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4%2F</url>
+    <content type="text"><![CDATA[国事如今谁倚仗，衣带一江而已。待续]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+      <tags>
+        <tag>EGOV</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[我和Hexo的秘密]]></title>
+    <url>%2F2017%2F06%2F06%2F%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86%2F</url>
+    <content type="text"><![CDATA[劝君莫惜金缕衣，劝君惜取少年时2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。 流量统计下面的人数统计和访问统计是用的busuanzi 阅读次数文章的阅读次数用的是百度统计和leanCloud 图床本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。 站内搜索本站的站内搜索是采用hexo自带的local search 引用站内文章可以通过内置标签post_link实现 1&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125; 例如 引用hello.md 1&#123;% post_link Hello %&#125; 或者 1&#123;% post_link Hello 你好 %&#125; 常用命令本地部署，在localhost：4000 1hexo s 清除无用的标签，索引，分类 1hexo clean 更新部署 1hexo d -g]]></content>
+      <categories>
+        <category>Hexo相关</category>
+      </categories>
+      <tags>
+        <tag>hexo</tag>
+        <tag>博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[SpringMVC的执行流程]]></title>
+    <url>%2F2017%2F06%2F05%2FSpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%2F</url>
+    <content type="text"><![CDATA[三更灯火五更鸡，正是男儿读书时在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。 Spring MVC 工作流程图 SpringMVC 处理请求过程： 用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获； DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。 DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法） 提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作： HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等 数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中 Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象； 根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ； ViewResolver 结合Model和View，来渲染视图 将渲染结果返回给客户端。 Spring MVC工作流程图 UML时序图 组件说明:以下组件通常使用框架提供实现： DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。 HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。 HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。 ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。]]></content>
+      <categories>
+        <category>Web开发框架</category>
+        <category>Spring</category>
+      </categories>
+      <tags>
+        <tag>SpringMVC</tag>
+        <tag>SpringMVC执行流程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Spark On YARN集群环境搭建]]></title>
+    <url>%2F2017%2F06%2F02%2FSpark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%2F</url>
+    <content type="text"><![CDATA[尽人事，听天命 最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。 写在前面用户尽量使用带有root权限的用户，这里假设每个机器的用户是spark，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了，每个节点上的用户都是一样的，安装的路径也必须是一致的。 软件准备： Jdk Scala Hadoop Spark 这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异， 修改主机名我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为： 10.1.130.2110.1.130.2210.1.130.23 这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 vi /etc/hostname 21节点： 110.1.130.21 master 22节点： 110.1.130.22 salve1 23节点： 110.1.130.23 slave2 配置完主机名之后，需要重启生效。 然后就是修改每个节点的hosts文件，方法是vi /etc/hosts 每个节点都做同样的修改，添加如下配置： 12310.1.130.21 master10.1.130.22 salve110.1.130.23 slave2 配置完成后，需要互ping一下，检查是否成功， 1spark@master$ ping slave1 #从master ping slave1，其他的类似 SSH免密登录如果机器没有安装ssh服务可以安装一下： 1sudo apt-get install openssh-server 免密登录，可以参考之间的方法 SSH免密登录 Java和Scala的安装以下所有的安装都是在master节点上进行的。 从官网下载最新版Java和Scala就可以，它们的安装方式差不多， Java的安装在你想要的安装的目录下解压,这里我们在自己用户下新建一个文件夹叫做app，注意不要用sudo来建立,直接在每一个节点下mkdir app就行了，将源文件放在app中，然后解压。 12cd apptar -zxvf jdk-7u75-linux-x64.gz 修改环境变量vi .bashrc, 添加下列内容,注意这里spark是你的用户名，即在你的户用文件夹下。 12345export WORK_SPACE=/home/spark/app/export JAVA_HOME=$WORK_SPACE/jdk1.7.0_75export JRE_HOME=/home/spark/work/jdk1.7.0_75/jreexport PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATHexport CLASSPATH=$CLASSPATH:.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib 生效环境变量 1$ source .bashrc 查看java版本，如果打印出如下版本信息，则说明安装成功 1234$ java -version java version "1.7.0_75"Java(TM) SE Runtime Environment (build 1.7.0_75-b13)Java HotSpot(TM) 64-Bit Server VM (build 24.75-b04, mixed mode) Scala的安装Scala 的安装也是一样的，同样解压在app文件夹下，配置环境变量： 12export SCALA_HOME=$WORK_SPACE/scala-2.10.4export PATH=$PATH:$SCALA_HOME/bin 生效环境变量 1$ source .bashrc 查看Scala版本，如果打印出如下版本信息，则说明安装成功 12$ scala -version Scala code runner version 2.10.4 -- Copyright 2002-2013, LAMP/EPFL 至此，我们的Java和Scala的安装工作就结束了，我们需要将安装的目录分发到slave1和slave2中，同时slave1和slave2的环境变量也需要像master中一样配置.分发 1234scp -r ~/app/jdk1.7.0_75 spark@slave1:~/app/scp -r ~/app/jdk1.7.0_75 spark@slave2:~/app/scp -r ~/app/scala-2.10.4 spark@slave1:~/app/scp -r ~/app/scala-2.10.4 spark@slave1:~/app/ 修改slave1和slave2环境的环境变量，可以直接复制。然后在slave1和slave2中分别测试一下有没有安装成功。 安装配置 Hadoop YARN下载解压从官网下载hadoop,这里我们以 hadoop2.6.0 版本为例。 同样我们在~/app中解压 1tar -zxvf hadoop-2.6.0.tar.gz 配置Hadoop同样我们可以在 .bashrc中配置Hadoop的环境变量 123export HADOOP_HOME=/home/spark/app/hadoop-2.6.0export PATH=$PATH:$HADOOP_HOME/binexport PATH=$PATH:$HADOOP_HOME/sbin 需要配置的配置文件都在hadoop根目录下的etc/hadoop中，一共需要配置7个文件： 1234567hadoop-env.shyarn-env.shslavescore-site.xmlhdfs-site.xmlmaprd-site.xmlyarn-site.xml 在hadoop-env.sh中配置JAVA_HOME 1export JAVA_HOME=/home/spark/app/jdk1.7.0_75 在yarn-env.sh中配置JAVA_HOME 1export JAVA_HOME=/home/spark/app/jdk1.7.0_75 在slaves中配置slave节点的ip或者host， 12slave1slave2 修改core-site.xml 1234567891011&lt;configuration&gt; &lt;property&gt; &lt;name&gt;fs.defaultFS&lt;/name&gt; &lt;value&gt;hdfs://master:9000/&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;hadoop.tmp.dir&lt;/name&gt; &lt;value&gt;file:/home/spark/workspace/hadoop-2.6.0/tmp&lt;/value&gt; &lt;description&gt;Abase for other temporary directories.&lt;/description&gt; &lt;/property&gt;&lt;/configuration&gt; 修改hdfs-site.xml 12345678910111213141516171819202122&lt;configuration&gt; &lt;property&gt; &lt;name&gt;dfs.namenode.secondary.http-address&lt;/name&gt; &lt;value&gt;master:9001&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt; &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/name&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt; &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/data&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.replication&lt;/name&gt; &lt;value&gt;3&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.namenode.datanode.registration.ip-hostname-check&lt;/name&gt; &lt;value&gt;false&lt;/value&gt; &lt;/property&gt;&lt;/configuration&gt; 修改mapred-site.xml 123456&lt;configuration&gt; &lt;property&gt; &lt;name&gt;mapreduce.framework.name&lt;/name&gt; &lt;value&gt;yarn&lt;/value&gt; &lt;/property&gt;&lt;/configuration&gt; 修改yarn-site.xml 123456789101112131415161718192021222324252627282930313233343536373839404142&lt;configuration&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt; &lt;value&gt;mapreduce_shuffle&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt; &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.pmem-check-enabled&lt;/name&gt; &lt;value&gt;false&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.vmem-check-enabled&lt;/name&gt; &lt;value&gt;false&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt; &lt;value&gt;amdnode0&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.address&lt;/name&gt; &lt;value&gt;master:8032&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt; &lt;value&gt;master:8030&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt; &lt;value&gt;master:8035&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.admin.address&lt;/name&gt; &lt;value&gt;master:8033&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.webapp.address&lt;/name&gt; &lt;value&gt;master:8088&lt;/value&gt; &lt;/property&gt;&lt;/configuration&gt; 这是我自己的配置，大家可以根据自己的需要修改，将配置好的hadoop-2.6.0文件夹分发给所有slaves吧。 12scp -r ~/app/hadoop-2.6.0 spark@slave1:~/app/scp -r ~/app/hadoop-2.6.0 spark@slave2:~/app/ 启动Hadoop在 master 上执行以下操作，就可以启动 hadoop 了,因为我们配置了Hadoop的环境变量所以就可以在任意目录下启动Hadoop了。 12start-dfs.sh #启动dfs,如果没有配置的话就是sbin/start-dfs.sh start-yarn.sh #启动yarn,如果没有配置的话就是sbin/start-yarn.sh 验证 Hadoop 是否安装成功可以通过jps命令查看各个节点启动的进程是否正常。在 master 上应该有以下几个进程： 12345$ jps #run on master3407 SecondaryNameNode3218 NameNode3552 ResourceManager3910 Jps 在每个slave上应该有以下几个进程： 1234$ jps #run on slaves2072 NodeManager2213 Jps1962 DataNode 或者在浏览器中输入 http://master:8088 ，应该有 hadoop 的管理界面出来了，并能看到 slave1 和 slave2 节点。也可以通过 1hadoop dfsadmin -report 查看节点使用情况。 Spark安装下载解压进入官方下载地址下载最新版Spark。我下载的是 spark-1.3.0-bin-hadoop2.4.tgz。 在~/app目录下解压 12tar -zxvf spark-1.3.0-bin-hadoop2.4.tgzmv spark-1.3.0-bin-hadoop2.4 spark-1.3.0 #如果觉得原来的文件名太长了，可以修改下 配置 Sparkspark的配置文件在spark根目录下的conf中, Spark需要修改的配置文件只有两个： 12spark-env.sh slaves 在conf目录下将spark-env.sh.template复制成spark-env.sh 123cd ~/app/spark-1.3.0/conf #进入spark配置目录cp spark-env.sh.template spark-env.sh #从配置模板复制vi spark-env.sh #添加配置内容 在spark-env.sh末尾添加以下内容（这是我的配置，你可以自行修改）： 1234567export SCALA_HOME=/home/spark/app/scala-2.10.4export JAVA_HOME=/home/spark/app/jdk1.7.0_75export HADOOP_HOME=/home/spark/app/hadoop-2.6.0export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoopSPARK_MASTER_IP=masterSPARK_LOCAL_DIRS=/home/spark/app/spark-1.3.0SPARK_DRIVER_MEMORY=1G 注：在设置Worker进程的CPU个数和内存大小，要注意机器的实际硬件条件，如果配置的超过当前Worker节点的硬件条件，Worker进程会启动失败。 修改slaves文件下slaves的主机名： 12slave1slave2 将配置好的spark-1.3.0文件夹分发给所有slaves吧 12scp -r ~/app/spark-1.3.0 spark@slave1:~/workspace/scp -r ~/app/spark-1.3.0 spark@slave2:~/workspace/ 启动Spark在spark的根目录下： 1sbin/start-all.sh 验证 Spark 是否安装成功用jps检查，在 master 上应该有以下几个进程： 123456$ jps7949 Jps7328 SecondaryNameNode7805 Master7137 NameNode7475 ResourceManager 在 slave 上应该有以下几个进程： 12345$jps3132 DataNode3759 Worker3858 Jps3231 NodeManager 也可以进入Spark的Web管理页面： http://master:8080 注意：三个节点的防火墙要关掉，不然很容易出错，这里中间很多的细节都没有涉及到，只是个大概的流程，我相信，每个人刚学的时候都不会一次性的成功，但是者未必不是好事，有些坑是需要踩过才知道，这里有很多的坑，祝大家早日脱坑。]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>Spark</tag>
+        <tag>YARN</tag>
+        <tag>分布式环境搭建</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[SSH免密登录]]></title>
+    <url>%2F2017%2F05%2F31%2FSSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%2F</url>
+    <content type="text"><![CDATA[纸上得来终觉浅，要知此事须躬行在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题 准备假设有两台机器他们的IP和主机名是：M1-IP：10.1.130.2 主机名：m1M2-IP：10.1.130.3 主机名：m2如果想要更改主机名，可以在每台机器的/etc/hostname中更改，但是需要重启生效。 映射主机名每个机器都进入 /etc/hosts ，并添加所有的主机名和IP映射1210.1.130.2 m110.1.130.3 m2 生成公钥执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 ~/.ssh 下面，名为id_rsa.pub。1ssh-keygen -t rsa 汇总公钥 汇总公钥至同一机器（为了方面下一步），假如在m2中将公钥复制到m1。 1scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2 将公钥合并至 authorized_keys 1cat id_rsa.pub* &gt;&gt;authorized_keys 分发公钥1scp authorized_keys m2@10.1.1130.3:~/.ssh 大工告成]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>免密登录</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[HDFS常用命令]]></title>
+    <url>%2F2017%2F05%2F31%2FHDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[衣带渐宽终不悔，为伊消得人憔悴 文件操作 建立目录12hadoop dfs -mkdir -p /user/hadoop/examples #加上-p是所有目录都要建立eadoop dfs -mkdir /user/hadoop/examples1 #建立examples1目录 删除目录12hadoop dfs -rm -r /user/hadoop/examples #加上-r，删除exampleshadoop dfs -rm -r /user #删除user目录 列出HDFS下的文件(夹) 12hadoop dfs -ls / #查看hdfs根目录下的文件夹(文件)hadoop dfs -ls /user/data #查看某个目录下的文件夹(文件) 查看文件内容 1hadoop dfs -cat /user/data/in/word.txt #查看文件内容，必须是一个文件，不能时目录 将hdfs上的文件(夹)复制到本地的文件系统 123456hadoop dfs -get /user/data rename #将data目录复制到当前执行该命令的本地文件系统，并重命名为renamehadoop dfs -get /user/data /home/user/data rename #将data目录复制到本地指定目录下，并重命名为renamehadoop dfs -get /user/data /home/user/data/core-site.xml /home/user/data/rename.xml #将core-site.xml复制到本地指定目录下，并重命名为rename.xmlhadoop dfs -getmerger /user/data/in merge.xml #将hdfs中某个目录下的的文件合并并下载到本地当前目录 将本地文件系统上传到hdfs上 1hadoop dfs -put file /user/data 管理与更新 执行基本信息, 查看HDFS的基本统计信息: 1hadoop dfsadmin -report HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布: 1hadoop$bin/start-balancer.sh]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>hadoop</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Git常用命令]]></title>
+    <url>%2F2017%2F05%2F31%2FGit%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[优秀的人，不是不合群，而是他们合群的人里面没有你 获取仓库 初始化一个版本仓库1git init Clone远程版本库 1git clone git@xbc.me:wordpress.git 添加远程版本库origin，语法为 git remote add [shortname] [url] 1git remote add origin git@xbc.me:wordpress.git 查看远程仓库 1git remote -v 提交修改 添加当前修改的文件到暂存区 1git add . 如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件 1git add -u 提交你的修改 1git commit –m "你的注释" 推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支] 1git push origin master 查看文件状态 1git status 跟踪新文件 1git add readme.txt 从当前跟踪列表移除文件，并完全删除 1git rm readme.txt 仅在暂存区删除，保留文件在当前目录，不再跟踪 1git rm –cached readme.txt 重命名文件 1git mv reademe.txt readme 查看提交的历史记录 1git log 修改最后一次提交注释的，利用–amend参数 1git commit --amend 忘记提交某些修改，下面的三条命令只会得到一个提交 123git commit –m "add readme.txt"git add readme_forgottengit commit –amend 假设你已经使用git add .，将修改过的文件a、b加到暂存区现在你只想提交a文件，不想提交b文件，应该这样 1git reset HEAD b 取消对文件的修改 1git checkout –- readme.txt 分支管理 创建一个分支 1git branch iss53 切换工作目录到iss53 1git chekcout iss53 将上面的命令合在一起，创建iss53分支并切换到iss53 1git chekcout –b iss53 合并iss53分支，当前工作目录为master 1git merge iss53 合并完成后，没有出现冲突，删除iss53分支 1git branch –d iss53 拉去远程仓库的数据，语法为 git fetch [remote-name] 1git fetch fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并 1git pull 查看远程仓库的信息 1git remote show origin 建立本地的dev分支追踪远程仓库的develop分支 1git checkout –b dev origin/develop+ #分支管理]]></content>
+      <categories>
+        <category>Git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+      </tags>
+  </entry>
 </search>
