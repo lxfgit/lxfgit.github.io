@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title></title>
+    <title><![CDATA[Redis概述]]></title>
     <url>%2F2017%2F09%2F13%2FRedis%E6%A6%82%E8%BF%B0%2F</url>
-    <content type="text"><![CDATA[title: Redis概述date: 2017-09-13 12:12:08tags: Redis, 分布式缓存categories: 数据库 Redis逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。 NoSql 的概述]]></content>
+    <content type="text"><![CDATA[逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。 NoSql 的概述]]></content>
+      <categories>
+        <category>数据库</category>
+        <category>Redis</category>
+      </categories>
+      <tags>
+        <tag>Redis 分布式缓存</tag>
+      </tags>
   </entry>
   <entry>
     <title><![CDATA[Mysql主从数据库的配置]]></title>
@@ -14,7 +21,7 @@
         <category>Mysql</category>
       </categories>
       <tags>
-        <tag>Mysql</tag>
+        <tag>Mysql 主从复制</tag>
       </tags>
   </entry>
   <entry>

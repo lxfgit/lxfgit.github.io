@@ -5,14 +5,22 @@
     
   <url>
     <loc>http://yoursite.com/2017/09/13/Redis%E6%A6%82%E8%BF%B0/</loc>
-    <lastmod>2017-09-13T04:20:58.000Z</lastmod>
+    <lastmod>2017-09-13T04:23:23.000Z</lastmod>
     <data>
         <display>
-        <title></title>
+        <title>Redis概述</title>
         <pubTime>2017-09-13T04:12:08.000Z</pubTime>
         
+        <tag>Redis 分布式缓存</tag>
+         
          
            
+             
+              <breadCrumb title="数据库" url="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+          
+             
+              <breadCrumb title="Redis" url="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/"/>
+          
         </display>
     </data>
     </url>
@@ -20,13 +28,13 @@
     
   <url>
     <loc>http://yoursite.com/2017/09/02/Tomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE/</loc>
-    <lastmod>2017-09-01T17:42:52.000Z</lastmod>
+    <lastmod>2017-09-13T04:23:22.000Z</lastmod>
     <data>
         <display>
         <title>Mysql主从数据库的配置</title>
         <pubTime>2017-09-01T17:25:17.000Z</pubTime>
         
-        <tag>Mysql</tag>
+        <tag>Mysql 主从复制</tag>
          
          
            
