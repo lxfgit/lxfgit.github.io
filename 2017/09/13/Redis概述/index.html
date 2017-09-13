@@ -74,7 +74,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Redis 分布式缓存," />
+  <meta name="keywords" content="Redis,分布式缓存," />
 
 
 
@@ -93,13 +93,13 @@
 
 
 <meta name="description" content="逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。">
-<meta name="keywords" content="Redis 分布式缓存">
+<meta name="keywords" content="Redis,分布式缓存">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis概述">
 <meta property="og:url" content="http://yoursite.com/2017/09/13/Redis概述/index.html">
 <meta property="og:site_name" content="平民">
 <meta property="og:description" content="逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。">
-<meta property="og:updated_time" content="2017-09-13T04:23:23.000Z">
+<meta property="og:updated_time" content="2017-09-13T04:36:38.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Redis概述">
 <meta name="twitter:description" content="逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。">
@@ -439,7 +439,9 @@
 
       
         <p><blockquote class="blockquote-center">逃避未必能躲过，面对未必最难过</blockquote><br>在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。<br><a id="more"></a></p>
-<h2 id="NoSql-的概述"><a href="#NoSql-的概述" class="headerlink" title="NoSql 的概述"></a>NoSql 的概述</h2>
+<h2 id="NoSql的概述"><a href="#NoSql的概述" class="headerlink" title="NoSql的概述"></a>NoSql的概述</h2><h3 id="NoSql简述"><a href="#NoSql简述" class="headerlink" title="NoSql简述"></a>NoSql简述</h3><p>传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。</p>
+<h3 id="NoSql数据库模型简介"><a href="#NoSql数据库模型简介" class="headerlink" title="NoSql数据库模型简介"></a>NoSql数据库模型简介</h3><p>聚合模型：KV键值对,BSON，列族，图形</p>
+<h3 id="NoSql数据库的"><a href="#NoSql数据库的" class="headerlink" title="NoSql数据库的"></a>NoSql数据库的</h3>
       
     </div>
 
@@ -468,7 +470,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/Redis-分布式缓存/" rel="tag"># Redis 分布式缓存</a>
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/分布式缓存/" rel="tag"># 分布式缓存</a>
           
         </div>
       
@@ -583,7 +587,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-count">18</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -643,7 +647,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NoSql-的概述"><span class="nav-number">1.</span> <span class="nav-text">NoSql 的概述</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NoSql的概述"><span class="nav-number">1.</span> <span class="nav-text">NoSql的概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSql简述"><span class="nav-number">1.1.</span> <span class="nav-text">NoSql简述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSql数据库模型简介"><span class="nav-number">1.2.</span> <span class="nav-text">NoSql数据库模型简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSql数据库的"><span class="nav-number">1.3.</span> <span class="nav-text">NoSql数据库的</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -675,7 +679,7 @@
 
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-09-13T04:23:23.000Z</updated>
+  <updated>2017-09-13T04:36:38.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,10 +20,12 @@
     <link href="http://yoursite.com/2017/09/13/Redis%E6%A6%82%E8%BF%B0/"/>
     <id>http://yoursite.com/2017/09/13/Redis概述/</id>
     <published>2017-09-13T04:12:08.000Z</published>
-    <updated>2017-09-13T04:23:23.000Z</updated>
+    <updated>2017-09-13T04:36:38.000Z</updated>
     
     <content type="html"><![CDATA[<p><blockquote class="blockquote-center">逃避未必能躲过，面对未必最难过</blockquote><br>在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。<br><a id="more"></a></p>
-<h2 id="NoSql-的概述"><a href="#NoSql-的概述" class="headerlink" title="NoSql 的概述"></a>NoSql 的概述</h2>]]></content>
+<h2 id="NoSql的概述"><a href="#NoSql的概述" class="headerlink" title="NoSql的概述"></a>NoSql的概述</h2><h3 id="NoSql简述"><a href="#NoSql简述" class="headerlink" title="NoSql简述"></a>NoSql简述</h3><p>传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。</p>
+<h3 id="NoSql数据库模型简介"><a href="#NoSql数据库模型简介" class="headerlink" title="NoSql数据库模型简介"></a>NoSql数据库模型简介</h3><p>聚合模型：KV键值对,BSON，列族，图形</p>
+<h3 id="NoSql数据库的"><a href="#NoSql数据库的" class="headerlink" title="NoSql数据库的"></a>NoSql数据库的</h3>]]></content>
     
     <summary type="html">
     
@@ -36,7 +38,9 @@
       <category term="Redis" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/"/>
     
     
-      <category term="Redis 分布式缓存" scheme="http://yoursite.com/tags/Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"/>
+      <category term="Redis" scheme="http://yoursite.com/tags/Redis/"/>
+    
+      <category term="分布式缓存" scheme="http://yoursite.com/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"/>
     
   </entry>
   
@@ -45,7 +49,7 @@
     <link href="http://yoursite.com/2017/09/02/Tomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE/"/>
     <id>http://yoursite.com/2017/09/02/Tomcat主从数据库的配置/</id>
     <published>2017-09-01T17:25:17.000Z</published>
-    <updated>2017-09-13T04:23:22.000Z</updated>
+    <updated>2017-09-13T04:26:18.000Z</updated>
     
     <content type="html"><![CDATA[<p><blockquote class="blockquote-center">没有实力的发怒，是毫无意义的</blockquote><br>因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。<br><a id="more"></a></p>
 ]]></content>
@@ -61,7 +65,9 @@
       <category term="Mysql" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Mysql/"/>
     
     
-      <category term="Mysql 主从复制" scheme="http://yoursite.com/tags/Mysql-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/"/>
+      <category term="Mysql" scheme="http://yoursite.com/tags/Mysql/"/>
+    
+      <category term="主从复制" scheme="http://yoursite.com/tags/%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/"/>
     
   </entry>
   
