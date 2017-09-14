@@ -1,610 +1,446 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <title>平民</title>
-  
-  <link href="/atom.xml" rel="self"/>
-  
-  <link href="http://yoursite.com/"/>
-  <updated>2017-09-13T04:26:18.000Z</updated>
-  <id>http://yoursite.com/</id>
-  
-  <author>
-    <name>LXF</name>
-    
-  </author>
-  
-  <generator uri="http://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>Mysql主从数据库的配置</title>
-    <link href="http://yoursite.com/2017/09/02/Tomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE/"/>
-    <id>http://yoursite.com/2017/09/02/Tomcat主从数据库的配置/</id>
-    <published>2017-09-01T17:25:17.000Z</published>
-    <updated>2017-09-13T04:26:18.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">没有实力的发怒，是毫无意义的</blockquote><br>因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。<br><a id="more"></a></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;没有实力的发怒，是毫无意义的&lt;/blockquote&gt;&lt;br&gt;因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="数据库" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
-    
-      <category term="Mysql" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Mysql/"/>
-    
-    
-      <category term="Mysql" scheme="http://yoursite.com/tags/Mysql/"/>
-    
-      <category term="主从复制" scheme="http://yoursite.com/tags/%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>分布式数据库中的一致性hash算法</title>
-    <link href="http://yoursite.com/2017/06/14/%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7hash%E7%AE%97%E6%B3%95/"/>
-    <id>http://yoursite.com/2017/06/14/分布式数据库中的一致性hash算法/</id>
-    <published>2017-06-14T00:27:04.000Z</published>
-    <updated>2017-09-14T02:22:57.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">没有实力的愤怒是毫无意义的</blockquote><br>在分布式环境中，由于数据量庞大，往往需要对数据做分区，分区有两种：一种是range分区，另一种是hash分区。顾名思义，hash分区是采用hash算法，将数据划分到不同的分区中，采用传统的hash算法能有效地将数据划分到不同的分区，但是，传统的hash算法在机器上下线时，由于hash映射的变化，会导致大量的数据发生迁移。一致性hash算法（consistent hash）就是用力解决该问题。<br><a id="more"></a></p>
-<h3 id="基本场景"><a href="#基本场景" class="headerlink" title="基本场景"></a>基本场景</h3><p>比如你有N个cache服务器（后面简称 cache），那么如何将一个对象 object映射到N个cache上呢，你很可能会采用类似下面的通用方法计算 object的hash值，然后均匀的映射到到N个cache；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hash(object)%N</div></pre></td></tr></table></figure></p>
-<p>一切都运行正常，再考虑如下的两种情况；</p>
-<ol>
-<li><p>一个cache服务器m down掉了（在实际应用中必须要考虑这种情况），这样所有映射到cache m 的对象都会失效，怎么办，需要把cache m 从 cache中移除，这时候cache是N-1台，映射公式变成了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hash(object)%(N-1)</div></pre></td></tr></table></figure>
-</li>
-<li><p>由于访问加重，需要添加cache，这时候 cache 是 N+1 台，映射公式变成了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hash(object)%(N+1)</div></pre></td></tr></table></figure>
-<p> 1 和 2 意味着什么？这意味着突然之间几乎所有的cache都失效了。对于服务器而言，这是一场灾难，洪水般的访问都会直接冲向后台服务器；再来考虑第三个问题；</p>
-</li>
-<li>由于硬件能力越来越强，你可能想让后面添加的节点多做点活，显然上 面的hash算法也做不到。<br>有什么方法可以改变这个状况呢，这就是 consistent hashing…</li>
-</ol>
-<h3 id="哈希算法的判定标准"><a href="#哈希算法的判定标准" class="headerlink" title="哈希算法的判定标准"></a>哈希算法的判定标准</h3><ol>
-<li><p><strong>平衡性（Balance）</strong>：平衡性是指哈希的结果能够尽可能分布到所有的缓冲中去，这样可以使得所有的缓冲空间都得到利用。很多哈希算法都能够满足这一条件。</p>
-</li>
-<li><p><strong>单调性（Monotonicity）</strong>：单调性是指如果已经有一些内容通过哈希分派到了相应的缓冲中，又有新的缓冲加入到系统中。哈希的结果应能够保证原有已分配的内容可以被映射到原有的或者新的缓冲中去，而不会被映射到旧的缓冲集合中的其他缓冲区。</p>
-</li>
-<li><p><strong>分散性（Spread）</strong>：在分布式环境中，终端有可能看不到所有的缓冲，而是只能看到其中的一部分。当终端希望通过哈希过程将内容映射到缓冲上时，由于不同终端所见的缓冲范围有可能不同，从而导致哈希的结果不一致，最终的结果是相同的内容被不同的终端映射到不同的缓冲区中。这种情况显然是应该避免的，因为它导致相同内容被存储到不同缓冲中去，降低了系统存储的效率。分散性的定义就是上述情况发生的严重程度。好的哈希算法应能够尽量避免不一致的情况发生，也就是尽量降低分散性。</p>
-</li>
-<li><p><strong>负载（Load）</strong>：负载问题实际上是从另一个角度看待分散性问题。既然不同的终端可能将相同的内容映射到不同的缓冲区中，那么对于一个特定的缓冲区而言，也可能被不同的用户映射为不同 的内容。与分散性一样，这种情况也是应当避免的，因此好的哈希算法应能够尽量降低缓冲的负荷。 </p>
-<p> 在分布式集群中，对机器的添加删除，或者机器故障后自动脱离集群这些操作是分布式集群管理最基本的功能。如果采用常用的<code>hash(object)%N</code>算法，那么在有机器添加或者删除后，很多原有的数据就无法找到了，这样严重的违反了单调性原则。接下来说一下一致性哈希算法。</p>
-</li>
-</ol>
-<h3 id="一致性哈希算法"><a href="#一致性哈希算法" class="headerlink" title="一致性哈希算法"></a>一致性哈希算法</h3><ol>
-<li><p><strong>环形Hash空间</strong><br>按照常用的 hash 算法来将对应的 key 哈希到一个具有 2^32 次方个桶的空间中，即 0 ~ (2^32) - 1 的数字空间中。现在我们可以将这些数字头尾相连，想象成一个闭合的环形。如下图：<br><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354350/hash环_iet72e.png" alt=""></p>
-</li>
-<li><p><strong>把数据通过一定的 hash 算法处理后映射到环上</strong><br>现在我们将 object1、object2、object3、object4 四个对象通过特定的 Hash 函数计算出对应的 key 值，然后散列到 Hash 环上。如下图：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Hash(object1) = key1；</div><div class="line">Hash(object2) = key2；</div><div class="line">Hash(object3) = key3；</div><div class="line">Hash(object4) = key4；</div></pre></td></tr></table></figure>
-<p> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354352/映射hash环_e9zovm.png" alt=""></p>
-</li>
-<li><p><strong>将机器通过 hash 算法映射到环上</strong><br>在采用一致性哈希算法的分布式集群中将新的机器加入，其原理是通过使用与对象存储一样的 Hash 算法将机器也映射到环中（一般情况下对机器的 hash 计算是采用机器的IP或者机器唯一的别名作为输入值），然后以顺时针的方向计算，将所有对象存储到离自己最近的机器中。<br>假设现在有 NODE1，NODE2，NODE3 三台机器，通过 Hash 算法得到对应的 KEY 值，映射到环中，其示意图如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Hash(NODE1) = KEY1;</div><div class="line">Hash(NODE2) = KEY2;</div><div class="line">Hash(NODE3) = KEY3;</div></pre></td></tr></table></figure>
-<p> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354356/添加虚拟结点_qachag.png" alt=""></p>
-<p> 通过上图可以看出对象与机器处于同一哈希空间中，这样按顺时针转动 object1 存储到了 NODE1 中，object3 存储到了 NODE2 中，object2、object4 存储到了 NODE3 中。在这样的部署环境中，hash 环是不会变更的，因此，通过算出对象的 hash 值就能快速的定位到对应的机器中，这样就能找到对象真正的存储位置了。</p>
-</li>
-<li><p><strong>机器的删除与添加</strong><br>普通 hash 求余算法最为不妥的地方就是在有机器的添加或者删除之后会造成大量的对象存储位置失效，这样就大大的不满足单调性了。下面来分析一下一致性哈希算法是如何处理的。</p>
-<ul>
-<li><p><strong>节点（机器）的删除</strong><br>以上面的分布为例，如果 NODE2 出现故障被删除了，那么按照顺时针迁移的方法，object3 将会被迁移到 NODE3 中，这样仅仅是 object3 的映射位置发生了变化，其它的对象没有任何的改动。如下图：<br><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354352/添加_hllbth.png" alt=""></p>
-</li>
-<li><p><strong>节点（机器）的添加</strong><br>如果往集群中添加一个新的节点 NODE4，通过对应的哈希算法得到 KEY4，并映射到环中，如下图：<br><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354354/删除_rj3cz5.png" alt=""></p>
-<p>通过按顺时针迁移的规则，那么 object2 被迁移到了 NODE4 中，其它对象还保持这原有的存储位置。通过对节点的添加和删除的分析，一致性哈希算法在保持了单调性的同时，还是数据的迁移达到了最小，这样的算法对分布式集群来说是非常合适的，避免了大量数据迁移，减小了服务器的的压力。</p>
-</li>
-</ul>
-</li>
-<li><p><strong>平衡性</strong><br>根据上面的图解分析，一致性哈希算法满足了单调性和负载均衡的特性以及一般 hash 算法的分散性，但这还并不能当做其被广泛应用的原由，因为还缺少了平衡性。下面将分析一致性哈希算法是如何满足平衡性的。hash 算法是不保证平衡的，如上面只部署了 NODE1 和NODE3 的情况（NODE2 被删除的图），object1 存储到了 NODE1 中，而 object2、object3、object4 都存储到了 NODE3 中，这样就照成了非常不平衡的状态。在一致性哈希算法中，为了尽可能的满足平衡性，其引入了虚拟节点 ——<strong>“虚拟节点”（ virtual node ）是实际节点（机器）在 hash 空间的复制品（ replication ），一实际个节点（机器）对应了若干个“虚拟节点”，这个对应个数也成为“复制个数”，“虚拟节点”在 hash 空间中以 hash 值排列。</strong></p>
-<p> 以上面只部署了 NODE1 和 NODE3 的情况（NODE2 被删除的图）为例，之前的对象在机器上的分布很不均衡，现在我们以2个副本（复制个数）为例，这样整个 hash 环中就存在了4个虚拟节点，最后对象映射的关系图如下：</p>
-<p> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354353/结点数据映射hash环_o3a4xa.png" alt=""></p>
-<p> 根据上图可知对象的映射关系：object1-&gt;NODE1-1，object2-&gt;NODE1-2，object3-&gt;NODE3-2，object4-&gt;NODE3-1。通过虚拟节点的引入，对象的分布就比较均衡了。那么在实际操作中，真正的对象查询是如何工作的呢？对象从 hash 到虚拟节点到实际节点的转换如下图：<br> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354356/查询hash_jafwml.png" alt=""></p>
-<p> “虚拟节点”的 hash 计算可以采用对应节点的 IP 地址加数字后缀的方式。例如假设 NODE1 的 IP 地址为 192.168.1.100。引入“虚拟节点”前，计算 cache A 的 hash 值：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Hash(“192.168.1.100”);</div></pre></td></tr></table></figure>
-<p> 引入“虚拟节点”后，计算“虚拟节”点 NODE1-1 和 NODE1-2 的 hash 值：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Hash(“192.168.1.100#1”);     // NODE1-1</div><div class="line">Hash(“192.168.1.100#2”);     // NODE1-2</div></pre></td></tr></table></figure>
-</li>
-</ol>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;没有实力的愤怒是毫无意义的&lt;/blockquote&gt;&lt;br&gt;在分布式环境中，由于数据量庞大，往往需要对数据做分区，分区有两种：一种是range分区，另一种是hash分区。顾名思义，hash分区是采用hash算法，将数据划分到不同的分区中，采用传统的hash算法能有效地将数据划分到不同的分区，但是，传统的hash算法在机器上下线时，由于hash映射的变化，会导致大量的数据发生迁移。一致性hash算法（consistent hash）就是用力解决该问题。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="数据库" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
-    
-      <category term="Redis" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/"/>
-    
-    
-      <category term="一致性哈希算法" scheme="http://yoursite.com/tags/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/"/>
-    
-      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>致谢606实验室</title>
-    <link href="http://yoursite.com/2017/06/07/%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4/"/>
-    <id>http://yoursite.com/2017/06/07/致谢606实验室/</id>
-    <published>2017-06-07T05:30:16.000Z</published>
-    <updated>2017-06-07T08:34:50.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">国事如今谁倚仗，衣带一江而已。</blockquote><br>待续<br><a id="more"></a></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;国事如今谁倚仗，衣带一江而已。&lt;/blockquote&gt;&lt;br&gt;待续&lt;br&gt;
-    
-    </summary>
-    
-      <category term="随笔" scheme="http://yoursite.com/categories/%E9%9A%8F%E7%AC%94/"/>
-    
-    
-      <category term="EGOV" scheme="http://yoursite.com/tags/EGOV/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>我和Hexo的秘密</title>
-    <link href="http://yoursite.com/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/"/>
-    <id>http://yoursite.com/2017/06/06/我和hexo的秘密/</id>
-    <published>2017-06-06T13:41:44.000Z</published>
-    <updated>2017-07-25T15:35:04.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">劝君莫惜金缕衣，劝君惜取少年时</blockquote><br><strong>2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。</strong><br><a id="more"></a></p>
-<h3 id="流量统计"><a href="#流量统计" class="headerlink" title="流量统计"></a>流量统计</h3><p>下面的人数统计和访问统计是用的busuanzi</p>
-<h3 id="阅读次数"><a href="#阅读次数" class="headerlink" title="阅读次数"></a>阅读次数</h3><p>文章的阅读次数用的是百度统计和leanCloud</p>
-<h3 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h3><p>本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。</p>
-<h3 id="站内搜索"><a href="#站内搜索" class="headerlink" title="站内搜索"></a>站内搜索</h3><p>本站的站内搜索是采用hexo自带的local search</p>
-<h3 id="引用站内文章"><a href="#引用站内文章" class="headerlink" title="引用站内文章"></a>引用站内文章</h3><p>可以通过内置标签post_link实现</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125;</div></pre></td></tr></table></figure>
-<p>例如 引用hello.md</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello %&#125;</div></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello 你好 %&#125;</div></pre></td></tr></table></figure>
-<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><p>本地部署，在localhost：4000</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo s</div></pre></td></tr></table></figure>
-<p>清除无用的标签，索引，分类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo clean</div></pre></td></tr></table></figure>
-<p>更新部署</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo d -g</div></pre></td></tr></table></figure>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;劝君莫惜金缕衣，劝君惜取少年时&lt;/blockquote&gt;&lt;br&gt;&lt;strong&gt;2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。&lt;/strong&gt;&lt;br&gt;
-    
-    </summary>
-    
-      <category term="Hexo相关" scheme="http://yoursite.com/categories/Hexo%E7%9B%B8%E5%85%B3/"/>
-    
-    
-      <category term="hexo" scheme="http://yoursite.com/tags/hexo/"/>
-    
-      <category term="博客" scheme="http://yoursite.com/tags/%E5%8D%9A%E5%AE%A2/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SpringMVC的执行流程</title>
-    <link href="http://yoursite.com/2017/06/05/SpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/"/>
-    <id>http://yoursite.com/2017/06/05/SpringMVC的执行流程/</id>
-    <published>2017-06-05T14:06:51.000Z</published>
-    <updated>2017-06-06T13:39:52.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">三更灯火五更鸡，正是男儿读书时</blockquote><br><strong>在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。</strong><br><a id="more"></a></p>
-<h3 id="Spring-MVC-工作流程图"><a href="#Spring-MVC-工作流程图" class="headerlink" title="Spring MVC 工作流程图"></a>Spring MVC 工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755889/SpringMVC%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90_ewz7aa.png" alt=""></p>
-<h3 id="SpringMVC-处理请求过程："><a href="#SpringMVC-处理请求过程：" class="headerlink" title="SpringMVC 处理请求过程："></a>SpringMVC 处理请求过程：</h3><ol>
-<li>用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；</li>
-<li>DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。</li>
-<li>DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法）</li>
-<li>提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：<ul>
-<li>HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息</li>
-<li>数据转换：对请求消息进行数据转换。如String转换成Integer、Double等</li>
-<li>数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等</li>
-<li>数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中</li>
-</ul>
-</li>
-<li>Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；</li>
-<li>根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ；</li>
-<li>ViewResolver 结合Model和View，来渲染视图</li>
-<li>将渲染结果返回给客户端。</li>
-</ol>
-<h3 id="Spring-MVC工作流程图"><a href="#Spring-MVC工作流程图" class="headerlink" title="Spring MVC工作流程图"></a>Spring MVC工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755888/Spring_MVC%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E5%9B%BE_lhxuct.png" alt=""></p>
-<h3 id="UML时序图"><a href="#UML时序图" class="headerlink" title="UML时序图"></a>UML时序图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755881/Spring_MVC-UML_sdj0tz.png" alt=""></p>
-<h4 id="组件说明"><a href="#组件说明" class="headerlink" title="组件说明:"></a>组件说明:</h4><p>以下组件通常使用框架提供实现：</p>
-<ul>
-<li>DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。</li>
-<li>HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。</li>
-<li>HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。</li>
-<li>ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;三更灯火五更鸡，正是男儿读书时&lt;/blockquote&gt;&lt;br&gt;&lt;strong&gt;在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。&lt;/strong&gt;&lt;br&gt;
-    
-    </summary>
-    
-      <category term="Web开发框架" scheme="http://yoursite.com/categories/Web%E5%BC%80%E5%8F%91%E6%A1%86%E6%9E%B6/"/>
-    
-      <category term="Spring" scheme="http://yoursite.com/categories/Web%E5%BC%80%E5%8F%91%E6%A1%86%E6%9E%B6/Spring/"/>
-    
-    
-      <category term="SpringMVC" scheme="http://yoursite.com/tags/SpringMVC/"/>
-    
-      <category term="SpringMVC执行流程" scheme="http://yoursite.com/tags/SpringMVC%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Spark On YARN集群环境搭建</title>
-    <link href="http://yoursite.com/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
-    <id>http://yoursite.com/2017/06/02/Spark-On-YARN集群环境搭建/</id>
-    <published>2017-06-02T14:54:56.000Z</published>
-    <updated>2017-07-19T12:30:38.000Z</updated>
-    
-    <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
+<!doctype html>
 
-<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
-<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是spark，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了，每个节点上的用户都是一样的，安装的路径也必须是一致的。</p>
-<h1 id="软件准备："><a href="#软件准备：" class="headerlink" title="软件准备："></a>软件准备：</h1><ul>
-<li>Jdk</li>
-<li>Scala</li>
-<li>Hadoop</li>
-<li>Spark</li>
-</ul>
-<p>这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异，</p>
-<h1 id="修改主机名"><a href="#修改主机名" class="headerlink" title="修改主机名"></a>修改主机名</h1><p>我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为：</p>
-<blockquote>
-<p>10.1.130.21<br>10.1.130.22<br>10.1.130.23</p>
-</blockquote>
-<p>这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 <code>vi /etc/hostname</code></p>
-<p>21节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div></pre></td></tr></table></figure>
-<p>22节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.22  salve1</div></pre></td></tr></table></figure>
-<p>23节点：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
-<p>配置完主机名之后，需要重启生效。</p>
-<p>然后就是修改每个节点的hosts文件，方法是<code>vi /etc/hosts</code></p>
-<p>每个节点都做同样的修改，添加如下配置：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div><div class="line">10.1.130.22  salve1</div><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
-<p>配置完成后，需要互ping一下，检查是否成功，</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">spark@master$ ping slave1 <span class="comment">#从master ping slave1，其他的类似</span></div></pre></td></tr></table></figure>
-<h1 id="SSH免密登录"><a href="#SSH免密登录" class="headerlink" title="SSH免密登录"></a>SSH免密登录</h1><p>如果机器没有安装ssh服务可以安装一下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install openssh-server</div></pre></td></tr></table></figure>
-<p>免密登录，可以参考之间的方法 <a href="/2017/05/31/SSH免密登录/" title="SSH免密登录">SSH免密登录</a></p>
-<h1 id="Java和Scala的安装"><a href="#Java和Scala的安装" class="headerlink" title="Java和Scala的安装"></a>Java和Scala的安装</h1><p><strong>以下所有的安装都是在master节点上进行的。</strong></p>
-<p>从官网下载最新版<a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank" rel="external">Java</a>和<a href="https://www.scala-lang.org/" target="_blank" rel="external">Scala</a>就可以，它们的安装方式差不多，</p>
-<h2 id="Java的安装"><a href="#Java的安装" class="headerlink" title="Java的安装"></a>Java的安装</h2><p>在你想要的安装的目录下解压,这里我们在自己用户下新建一个文件夹叫做app，注意不要用<code>sudo</code>来建立,直接在每一个节点下<code>mkdir app</code>就行了，将源文件放在app中，然后解压。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> app</div><div class="line">tar -zxvf jdk-7u75-linux-x64.gz</div></pre></td></tr></table></figure>
-<p>修改环境变量<code>vi .bashrc</code>, 添加下列内容,注意这里spark是你的用户名，即在你的户用文件夹下。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> WORK_SPACE=/home/spark/app/</div><div class="line"><span class="built_in">export</span> JAVA_HOME=<span class="variable">$WORK_SPACE</span>/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> JRE_HOME=/home/spark/work/jdk1.7.0_75/jre</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$JAVA_HOME</span>/jre/bin:<span class="variable">$PATH</span></div><div class="line"><span class="built_in">export</span> CLASSPATH=<span class="variable">$CLASSPATH</span>:.:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</div></pre></td></tr></table></figure>
-<p>生效环境变量</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
-<p>查看java版本，如果打印出如下版本信息，则说明安装成功</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ java -version </div><div class="line">java version <span class="string">"1.7.0_75"</span></div><div class="line">Java(TM) SE Runtime Environment (build 1.7.0_75-b13)</div><div class="line">Java HotSpot(TM) 64-Bit Server VM (build 24.75-b04, mixed mode)</div></pre></td></tr></table></figure>
-<h2 id="Scala的安装"><a href="#Scala的安装" class="headerlink" title="Scala的安装"></a>Scala的安装</h2><p>Scala 的安装也是一样的，同样解压在app文件夹下，配置环境变量：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=<span class="variable">$WORK_SPACE</span>/scala-2.10.4</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$SCALA_HOME</span>/bin</div></pre></td></tr></table></figure>
-<p>生效环境变量</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
-<p>查看Scala版本，如果打印出如下版本信息，则说明安装成功</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ scala -version       </div><div class="line">Scala code runner version 2.10.4 -- Copyright 2002-2013, LAMP/EPFL</div></pre></td></tr></table></figure>
-<p>至此，我们的Java和Scala的安装工作就结束了，我们需要将安装的目录分发到slave1和slave2中，同时slave1和slave2的环境变量也需要像master中一样配置.<br>分发</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/jdk1.7.0_75 spark@slave1:~/app/</div><div class="line">scp -r ~/app/jdk1.7.0_75 spark@slave2:~/app/</div><div class="line">scp -r ~/app/scala-2.10.4 spark@slave1:~/app/</div><div class="line">scp -r ~/app/scala-2.10.4 spark@slave1:~/app/</div></pre></td></tr></table></figure>
-<p>修改slave1和slave2环境的环境变量，可以直接复制。然后在slave1和slave2中分别测试一下有没有安装成功。</p>
-<h1 id="安装配置-Hadoop-YARN"><a href="#安装配置-Hadoop-YARN" class="headerlink" title="安装配置 Hadoop YARN"></a>安装配置 Hadoop YARN</h1><h2 id="下载解压"><a href="#下载解压" class="headerlink" title="下载解压"></a>下载解压</h2><p>从<a href="http://hadoop.apache.org/#Download+Hadoop" target="_blank" rel="external">官网</a>下载hadoop,这里我们以 hadoop2.6.0 版本为例。</p>
-<p>同样我们在~/app中解压</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tar -zxvf hadoop-2.6.0.tar.gz</div></pre></td></tr></table></figure>
-<h2 id="配置Hadoop"><a href="#配置Hadoop" class="headerlink" title="配置Hadoop"></a>配置Hadoop</h2><p>同样我们可以在 <code>.bashrc</code>中配置Hadoop的环境变量</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> HADOOP_HOME=/home/spark/app/hadoop-2.6.0</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$HADOOP_HOME</span>/bin</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$HADOOP_HOME</span>/sbin</div></pre></td></tr></table></figure>
-<p>需要配置的配置文件都在hadoop根目录下的<code>etc/hadoop</code>中，一共需要配置7个文件：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">hadoop-env.sh</div><div class="line">yarn-env.sh</div><div class="line">slaves</div><div class="line">core-site.xml</div><div class="line">hdfs-site.xml</div><div class="line">maprd-site.xml</div><div class="line">yarn-site.xml</div></pre></td></tr></table></figure>
-<ol>
-<li><p>在<code>hadoop-env.sh</code>中配置JAVA_HOME</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>yarn-env.sh</code>中配置JAVA_HOME</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
-</li>
-<li><p>在slaves中配置slave节点的ip或者host，</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改core-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;fs.defaultFS&lt;/name&gt;</div><div class="line">        &lt;value&gt;hdfs://master:9000/&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">         &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</div><div class="line">         &lt;value&gt;file:/home/spark/workspace/hadoop-2.6.0/tmp&lt;/value&gt;</div><div class="line">         &lt;description&gt;Abase <span class="keyword">for</span> other temporary directories.&lt;/description&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改hdfs-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.namenode.secondary.http-address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:9001&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;</div><div class="line">        &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/name&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;</div><div class="line">        &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/data&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.replication&lt;/name&gt;</div><div class="line">        &lt;value&gt;3&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;dfs.namenode.datanode.registration.ip-hostname-check&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改mapred-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</div><div class="line">        &lt;value&gt;yarn&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-<li><p>修改yarn-site.xml</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;</div><div class="line">        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt;</div><div class="line">        &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.nodemanager.pmem-check-enabled&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.nodemanager.vmem-check-enabled&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt;</div><div class="line">    	&lt;value&gt;amdnode0&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8032&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8030&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8035&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.admin.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8033&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.webapp.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8088&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>这是我自己的配置，大家可以根据自己的需要修改，将配置好的hadoop-2.6.0文件夹分发给所有slaves吧。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/hadoop-2.6.0 spark@slave1:~/app/</div><div class="line">scp -r ~/app/hadoop-2.6.0 spark@slave2:~/app/</div></pre></td></tr></table></figure>
-<h2 id="启动Hadoop"><a href="#启动Hadoop" class="headerlink" title="启动Hadoop"></a>启动Hadoop</h2><p>在 master 上执行以下操作，就可以启动 hadoop 了,因为我们配置了Hadoop的环境变量所以就可以在任意目录下启动Hadoop了。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">start-dfs.sh               <span class="comment">#启动dfs,如果没有配置的话就是sbin/start-dfs.sh                </span></div><div class="line">start-yarn.sh              <span class="comment">#启动yarn,如果没有配置的话就是sbin/start-yarn.sh</span></div></pre></td></tr></table></figure>
-<h2 id="验证-Hadoop-是否安装成功"><a href="#验证-Hadoop-是否安装成功" class="headerlink" title="验证 Hadoop 是否安装成功"></a>验证 Hadoop 是否安装成功</h2><p>可以通过jps命令查看各个节点启动的进程是否正常。在 master 上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ jps  <span class="comment">#run on master</span></div><div class="line">3407 SecondaryNameNode</div><div class="line">3218 NameNode</div><div class="line">3552 ResourceManager</div><div class="line">3910 Jps</div></pre></td></tr></table></figure>
-<p>在每个slave上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ jps   <span class="comment">#run on slaves</span></div><div class="line">2072 NodeManager</div><div class="line">2213 Jps</div><div class="line">1962 DataNode</div></pre></td></tr></table></figure>
-<p>或者在浏览器中输入 <a href="http://master:8088" target="_blank" rel="external">http://master:8088</a> ，应该有 hadoop 的管理界面出来了，并能看到 slave1 和 slave2 节点。也可以通过 </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
-<p>查看节点使用情况。</p>
-<h1 id="Spark安装"><a href="#Spark安装" class="headerlink" title="Spark安装"></a>Spark安装</h1><h2 id="下载解压-1"><a href="#下载解压-1" class="headerlink" title="下载解压"></a>下载解压</h2><p>进入官方下载地址下载最新版<a href="https://spark.apache.org/" target="_blank" rel="external">Spark</a>。我下载的是 spark-1.3.0-bin-hadoop2.4.tgz。</p>
-<p>在~/app目录下解压</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">tar -zxvf spark-1.3.0-bin-hadoop2.4.tgz</div><div class="line">mv spark-1.3.0-bin-hadoop2.4 spark-1.3.0    <span class="comment">#如果觉得原来的文件名太长了，可以修改下</span></div></pre></td></tr></table></figure>
-<h2 id="配置-Spark"><a href="#配置-Spark" class="headerlink" title="配置 Spark"></a>配置 Spark</h2><p>spark的配置文件在spark根目录下的<code>conf</code>中, Spark需要修改的配置文件只有两个：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">spark-env.sh </div><div class="line">slaves</div></pre></td></tr></table></figure>
-<ol>
-<li><p>在conf目录下将<code>spark-env.sh.template</code>复制成<code>spark-env.sh</code></p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> ~/app/spark-1.3.0/conf    <span class="comment">#进入spark配置目录</span></div><div class="line">cp spark-env.sh.template spark-env.sh   <span class="comment">#从配置模板复制</span></div><div class="line">vi spark-env.sh     <span class="comment">#添加配置内容</span></div></pre></td></tr></table></figure>
-<p> 在spark-env.sh末尾添加以下内容（这是我的配置，你可以自行修改）：</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=/home/spark/app/scala-2.10.4</div><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> HADOOP_HOME=/home/spark/app/hadoop-2.6.0</div><div class="line"><span class="built_in">export</span> HADOOP_CONF_DIR=<span class="variable">$HADOOP_HOME</span>/etc/hadoop</div><div class="line">SPARK_MASTER_IP=master</div><div class="line">SPARK_LOCAL_DIRS=/home/spark/app/spark-1.3.0</div><div class="line">SPARK_DRIVER_MEMORY=1G</div></pre></td></tr></table></figure>
-<p> 注：在设置Worker进程的CPU个数和内存大小，要注意机器的实际硬件条件，如果配置的超过当前Worker节点的硬件条件，Worker进程会启动失败。</p>
-</li>
-<li><p>修改slaves文件下slaves的主机名：</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>将配置好的spark-1.3.0文件夹分发给所有slaves吧</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/spark-1.3.0 spark@slave1:~/workspace/</div><div class="line">scp -r ~/app/spark-1.3.0 spark@slave2:~/workspace/</div></pre></td></tr></table></figure>
-<h2 id="启动Spark"><a href="#启动Spark" class="headerlink" title="启动Spark"></a>启动Spark</h2><p>在spark的根目录下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sbin/start-all.sh</div></pre></td></tr></table></figure>
-<p>验证 Spark 是否安装成功<br>用jps检查，在 master 上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">$ jps</div><div class="line">7949 Jps</div><div class="line">7328 SecondaryNameNode</div><div class="line">7805 Master</div><div class="line">7137 NameNode</div><div class="line">7475 ResourceManager</div></pre></td></tr></table></figure>
-<p>在 slave 上应该有以下几个进程：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$jps</span></div><div class="line">3132 DataNode</div><div class="line">3759 Worker</div><div class="line">3858 Jps</div><div class="line">3231 NodeManager</div></pre></td></tr></table></figure>
-<p>也可以进入Spark的Web管理页面： <a href="http://master:8080" target="_blank" rel="external">http://master:8080</a></p>
-<p><strong>注意：三个节点的防火墙要关掉，不然很容易出错，这里中间很多的细节都没有涉及到，只是个大概的流程，我相信，每个人刚学的时候都不会一次性的成功，但是者未必不是好事，有些坑是需要踩过才知道，这里有很多的坑，祝大家早日脱坑。</strong></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;blockquote class=&quot;blockquote-center&quot;&gt;尽人事，听天命&lt;/blockquote&gt;
 
-&lt;p&gt;最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="分布式系统" scheme="http://yoursite.com/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
-    
-    
-      <category term="Spark" scheme="http://yoursite.com/tags/Spark/"/>
-    
-      <category term="YARN" scheme="http://yoursite.com/tags/YARN/"/>
-    
-      <category term="分布式环境搭建" scheme="http://yoursite.com/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SSH免密登录</title>
-    <link href="http://yoursite.com/2017/05/31/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/"/>
-    <id>http://yoursite.com/2017/05/31/SSH免密登录/</id>
-    <published>2017-05-31T05:56:07.000Z</published>
-    <updated>2017-06-03T03:40:42.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br><a id="more"></a></p>
-<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>假设有两台机器他们的IP和主机名是：<br><em>M1-IP</em>：<code>10.1.130.2</code>         <em>主机名</em>：<code>m1</code><br><em>M2-IP</em>：<code>10.1.130.3</code>         <em>主机名</em>：<code>m2</code><br>如果想要更改主机名，可以在每台机器的<code>/etc/hostname</code>中更改，但是需要<strong>重启生效</strong>。</p>
-<h3 id="映射主机名"><a href="#映射主机名" class="headerlink" title="映射主机名"></a>映射主机名</h3><p>每个机器都进入 <code>/etc/hosts</code> ，并添加所有的主机名和IP映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">10.1.130.2   m1</div><div class="line">10.1.130.3   m2</div></pre></td></tr></table></figure></p>
-<h3 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h3><p>执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 <code>~/.ssh</code> 下面，名为<code>id_rsa.pub</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure></p>
-<h3 id="汇总公钥"><a href="#汇总公钥" class="headerlink" title="汇总公钥"></a>汇总公钥</h3><ul>
-<li><p>汇总公钥至同一机器（为了方面下一步），假如在<code>m2</code>中将公钥复制到<code>m1</code>。</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2</div></pre></td></tr></table></figure>
-</li>
-<li><p>将公钥合并至 <code>authorized_keys</code></p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat id_rsa.pub* &gt;&gt;authorized_keys</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="分发公钥"><a href="#分发公钥" class="headerlink" title="分发公钥"></a>分发公钥</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp authorized_keys m2@10.1.1130.3:~/.ssh</div></pre></td></tr></table></figure>
-<p>大工告成</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;纸上得来终觉浅，要知此事须躬行&lt;/blockquote&gt;&lt;br&gt;在配置集群的时候，ssh免密登录时第一步。&lt;strong&gt;其实linux免密登录很简单，四步就可以解决问题&lt;/strong&gt;&lt;br&gt;
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://yoursite.com/categories/Linux/"/>
-    
-    
-      <category term="免密登录" scheme="http://yoursite.com/tags/%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>HDFS常用命令</title>
-    <link href="http://yoursite.com/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
-    <id>http://yoursite.com/2017/05/31/HDFS常用命令/</id>
-    <published>2017-05-31T02:40:58.000Z</published>
-    <updated>2017-06-19T12:31:29.000Z</updated>
-    
-    <content type="html"><![CDATA[<blockquote class="blockquote-center">衣带渐宽终不悔，为伊消得人憔悴</blockquote>
 
-<h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
-<li>建立目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   <span class="comment">#加上-p是所有目录都要建立</span></div><div class="line">eadoop dfs -mkdir  /user/hadoop/examples1    <span class="comment">#建立examples1目录</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<a id="more"></a> 
-<ul>
-<li>删除目录<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -rm -r /user/hadoop/examples    #加上-r，删除examples</div><div class="line">hadoop dfs -rm -r /user                    #删除user目录</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<ul>
-<li><p>列出HDFS下的文件(夹)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -ls /                 #查看hdfs根目录下的文件夹(文件)</div><div class="line">hadoop dfs -ls /user/data        #查看某个目录下的文件夹(文件)</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件内容</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -cat /user/data/in/word.txt     #查看文件内容，必须是一个文件，不能时目录</div></pre></td></tr></table></figure>
-</li>
-<li><p>将hdfs上的文件(夹)复制到本地的文件系统</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -get /user/data   rename                                                      #将data目录复制到当前执行该命令的本地文件系统，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data  rename                                     #将data目录复制到本地指定目录下，并重命名为rename</div><div class="line"></div><div class="line">hadoop dfs -get /user/data  /home/user/data/core-site.xml  /home/user/data/rename.xml    #将core-site.xml复制到本地指定目录下，并重命名为rename.xml</div><div class="line"></div><div class="line">hadoop dfs -getmerger /user/data/in merge.xml                                            #将hdfs中某个目录下的的文件合并并下载到本地当前目录</div></pre></td></tr></table></figure>
-</li>
-<li><p>将本地文件系统上传到hdfs上</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -put file /user/data</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="管理与更新"><a href="#管理与更新" class="headerlink" title="管理与更新"></a>管理与更新</h2><ul>
-<li><p>执行基本信息, 查看HDFS的基本统计信息:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
-</li>
-<li><p>HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop$bin/start-balancer.sh</div></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;blockquote class=&quot;blockquote-center&quot;&gt;衣带渐宽终不悔，为伊消得人憔悴&lt;/blockquote&gt;
+  
 
-&lt;h2 id=&quot;文件操作&quot;&gt;&lt;a href=&quot;#文件操作&quot; class=&quot;headerlink&quot; title=&quot;文件操作&quot;&gt;&lt;/a&gt;文件操作&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;建立目录&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;hadoop dfs -mkdir -p /user/hadoop/examples   &lt;span class=&quot;comment&quot;&gt;#加上-p是所有目录都要建立&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;eadoop dfs -mkdir  /user/hadoop/examples1    &lt;span class=&quot;comment&quot;&gt;#建立examples1目录&lt;/span&gt;&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-    
-    </summary>
-    
-      <category term="分布式系统" scheme="http://yoursite.com/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
-    
-    
-      <category term="hadoop" scheme="http://yoursite.com/tags/hadoop/"/>
-    
-  </entry>
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
-  <entry>
-    <title>Git常用命令</title>
-    <link href="http://yoursite.com/2017/05/31/Git%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
-    <id>http://yoursite.com/2017/05/31/Git常用命令/</id>
-    <published>2017-05-31T02:15:15.000Z</published>
-    <updated>2017-06-03T03:39:05.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">优秀的人，不是不合群，而是他们合群的人里面没有你</blockquote></p>
-<h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><ul>
-<li>初始化一个版本仓库<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git init</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<a id="more"></a>
-<ul>
-<li><p>Clone远程版本库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">clone</span> git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
-</li>
-<li><p>添加远程版本库origin，语法为 git remote add [shortname] [url]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote add origin git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看远程仓库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote -v</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="提交修改"><a href="#提交修改" class="headerlink" title="提交修改"></a>提交修改</h2><ul>
-<li><p>添加当前修改的文件到暂存区</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add .</div></pre></td></tr></table></figure>
-</li>
-<li><p>如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add -u</div></pre></td></tr></table></figure>
-</li>
-<li><p>提交你的修改</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"你的注释"</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git push origin master</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看文件状态</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git status</div></pre></td></tr></table></figure>
-</li>
-<li><p>跟踪新文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>从当前跟踪列表移除文件，并完全删除</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>仅在暂存区删除，保留文件在当前目录，不再跟踪</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm –cached readme.txt</div></pre></td></tr></table></figure>
-</li>
-<li><p>重命名文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git mv reademe.txt readme</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看提交的历史记录</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">log</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>修改最后一次提交注释的，利用–amend参数</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit --amend</div></pre></td></tr></table></figure>
-</li>
-<li><p>忘记提交某些修改，下面的三条命令只会得到一个提交</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"add readme.txt"</span></div><div class="line">git add readme_forgotten</div><div class="line">git commit –amend</div></pre></td></tr></table></figure>
-</li>
-<li><p>假设你已经使用<code>git add .</code>，将修改过的文件a、b加到暂存区<br>现在你只想提交a文件，不想提交b文件，应该这样</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git reset HEAD b</div></pre></td></tr></table></figure>
-</li>
-<li><p>取消对文件的修改</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –- readme.txt</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h2><ul>
-<li><p>创建一个分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>切换工作目录到iss53</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>将上面的命令合在一起，创建iss53分支并切换到iss53</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout –b iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>合并iss53分支，当前工作目录为master</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git merge iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>合并完成后，没有出现冲突，删除iss53分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch –d iss53</div></pre></td></tr></table></figure>
-</li>
-<li><p>拉去远程仓库的数据，语法为 git fetch [remote-name]</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git fetch</div></pre></td></tr></table></figure>
-</li>
-<li><p>fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git pull</div></pre></td></tr></table></figure>
-</li>
-<li><p>查看远程仓库的信息</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote show origin</div></pre></td></tr></table></figure>
-</li>
-<li><p>建立本地的dev分支追踪远程仓库的develop分支</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –b dev origin/develop+ <span class="comment">#分支管理</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;优秀的人，不是不合群，而是他们合群的人里面没有你&lt;/blockquote&gt;&lt;/p&gt;
-&lt;h2 id=&quot;获取仓库&quot;&gt;&lt;a href=&quot;#获取仓库&quot; class=&quot;headerlink&quot; title=&quot;获取仓库&quot;&gt;&lt;/a&gt;获取仓库&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;初始化一个版本仓库&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;git init&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-    
-    </summary>
-    
-      <category term="Git" scheme="http://yoursite.com/categories/Git/"/>
-    
-    
-      <category term="git" scheme="http://yoursite.com/tags/git/"/>
-    
-  </entry>
   
-  <entry>
-    <title>Redis概述</title>
-    <link href="http://yoursite.com/2017/05/13/Redis%E6%A6%82%E8%BF%B0/"/>
-    <id>http://yoursite.com/2017/05/13/Redis概述/</id>
-    <published>2017-05-13T04:12:08.000Z</published>
-    <updated>2017-09-14T01:04:00.000Z</updated>
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
     
-    <content type="html"><![CDATA[<p><blockquote class="blockquote-center">逃避未必能躲过，面对未必最难过</blockquote><br>在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。<br><a id="more"></a></p>
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Redis,分布式缓存," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="平民" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="http://res.cloudinary.com/drqf361hz/image/upload/v1496822587/favicon_tbvfdi.png?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。">
+<meta name="keywords" content="Redis,分布式缓存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis概述">
+<meta property="og:url" content="http://yoursite.com/2017/05/13/Redis概述/index.html">
+<meta property="og:site_name" content="平民">
+<meta property="og:description" content="逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。">
+<meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1505321467/Redis主从复制原理.png">
+<meta property="og:updated_time" content="2017-09-14T01:04:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis概述">
+<meta name="twitter:description" content="逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。">
+<meta name="twitter:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1505321467/Redis主从复制原理.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/05/13/Redis概述/"/>
+
+
+
+
+
+  <title>Redis概述 | 平民</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8989a6453aa6ff07a4f3ea36a549a280";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">平民</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/read" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            阅读排行
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/13/Redis概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="LXF">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/tc.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="平民">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis概述</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-13T12:12:08+08:00">
+                2017-05-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2017/05/13/Redis概述/" class="leancloud_visitors" data-flag-title="Redis概述">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><blockquote class="blockquote-center">逃避未必能躲过，面对未必最难过</blockquote><br>在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。<br><a id="more"></a></p>
 <h2 id="NoSql的概述"><a href="#NoSql的概述" class="headerlink" title="NoSql的概述"></a>NoSql的概述</h2><h3 id="NoSql简述"><a href="#NoSql简述" class="headerlink" title="NoSql简述"></a>NoSql简述</h3><p>传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。</p>
 <h3 id="NoSql数据库模型简介"><a href="#NoSql数据库模型简介" class="headerlink" title="NoSql数据库模型简介"></a>NoSql数据库模型简介</h3><p>聚合模型：KV键值对,BSON，列族，图形</p>
 <h3 id="在分布式数据库中CAP原理CAP-BASE"><a href="#在分布式数据库中CAP原理CAP-BASE" class="headerlink" title="在分布式数据库中CAP原理CAP+BASE"></a>在分布式数据库中CAP原理CAP+BASE</h3><h4 id="传统的ACID分别是什么"><a href="#传统的ACID分别是什么" class="headerlink" title="传统的ACID分别是什么"></a>传统的ACID分别是什么</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">A (Atomicity) 原子性</div><div class="line">C (Consistency) 一致性</div><div class="line">I (Isolation) 独立性</div><div class="line">D (Durability) 持久性</div></pre></td></tr></table></figure>
@@ -886,23 +722,836 @@
 <li><p><strong>JedisPoolConfig配置总结</strong><br>JedisPool的配置参数大部分是由JedisPoolConfig的对应项来赋值的。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">#控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted。</div><div class="line">maxActive</div><div class="line">#控制一个pool最多有多少个状态为idle(空闲)的jedis实例</div><div class="line">maxIdle：</div><div class="line">#表示当pool中的jedis实例都被allocated完时，pool要采取的操作；默认有三种。</div><div class="line">whenExhaustedAction：</div><div class="line">#表示无jedis实例时，直接抛出NoSuchElementException；</div><div class="line">WHEN_EXHAUSTED_FAIL</div><div class="line">#则表示阻塞住，或者达到maxWait时抛出JedisConnectionException；</div><div class="line">WHEN_EXHAUSTED_BLOCK</div><div class="line">#则表示新建一个jedis实例，也就说设置的maxActive无用； </div><div class="line">WHEN_EXHAUSTED_GROW</div><div class="line">#表示当borrow一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛JedisConnectionException；</div><div class="line">maxWait</div><div class="line">#获得一个jedis实例的时候是否检查连接可用性（ping()）；如果为true，则得到的jedis实例均是可用的；</div><div class="line">testOnBorrow</div><div class="line">#return 一个jedis实例给pool时，是否检查连接可用性（ping()）；</div><div class="line">testOnReturn</div><div class="line">#如果为true，表示有一个idle object evitor线程对idle object进行扫描，如果validate失败，此object会被从pool中drop掉；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；</div><div class="line">testWhileIdle</div><div class="line">#表示idle object evitor两次扫描之间要sleep的毫秒数；</div><div class="line">timeBetweenEvictionRunsMillis</div><div class="line">#表示idle object evitor每次扫描的最多的对象数；</div><div class="line">numTestsPerEvictionRun</div><div class="line">#表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；</div><div class="line">minEvictableIdleTimeMillis</div><div class="line">#在minEvictableIdleTimeMillis基础上，加入了至少minIdle个对象已经在pool里面了。如果为-1，evicted不会根据idle time驱逐任何对象。如果minEvictableIdleTimeMillis&gt;0，则此项设置无意义，且只有在timeBetweenEvictionRunsMillis大于0时才有意义；</div><div class="line">softMinEvictableIdleTimeMillis</div><div class="line">#borrowObject返回对象时，是采用DEFAULT_LIFO（last in first out，即类似cache的最频繁使用队列），如果为False，则表示FIFO队列；</div><div class="line">lifo</div><div class="line">#其中JedisPoolConfig对一些参数的默认设置如下：</div><div class="line">testWhileIdle=true</div><div class="line">minEvictableIdleTimeMills=60000</div><div class="line">timeBetweenEvictionRunsMillis=30000</div><div class="line">numTestsPerEvictionRun=-1</div></pre></td></tr></table></figure></li>
 </ul>
-]]></content>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/分布式缓存/" rel="tag"># 分布式缓存</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/05/31/Git常用命令/" rel="prev" title="Git常用命令">
+                Git常用命令 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
     
-    <summary type="html">
-    
-      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;逃避未必能躲过，面对未必最难过&lt;/blockquote&gt;&lt;br&gt;在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="数据库" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
-    
-      <category term="Redis" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/"/>
-    
-    
-      <category term="Redis" scheme="http://yoursite.com/tags/Redis/"/>
-    
-      <category term="分布式缓存" scheme="http://yoursite.com/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"/>
-    
-  </entry>
+  </div>
+
+
+        </div>
+        
+          
   
-</feed>
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/tc.jpg"
+               alt="LXF" />
+          <p class="site-author-name" itemprop="name">LXF</p>
+           
+              <p class="site-description motion-element" itemprop="description">以平常心读一本世俗</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              平民的窝
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://github.com/lxfgit" title="Github" target="_blank">Github</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.jianshu.com/users/f326d9e8459f/timeline" title="简书" target="_blank">简书</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NoSql的概述"><span class="nav-number">1.</span> <span class="nav-text">NoSql的概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSql简述"><span class="nav-number">1.1.</span> <span class="nav-text">NoSql简述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSql数据库模型简介"><span class="nav-number">1.2.</span> <span class="nav-text">NoSql数据库模型简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在分布式数据库中CAP原理CAP-BASE"><span class="nav-number">1.3.</span> <span class="nav-text">在分布式数据库中CAP原理CAP+BASE</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#传统的ACID分别是什么"><span class="nav-number">1.3.1.</span> <span class="nav-text">传统的ACID分别是什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式数据库CAP"><span class="nav-number">1.3.2.</span> <span class="nav-text">分布式数据库CAP</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CAP的3进2"><span class="nav-number">1.3.3.</span> <span class="nav-text">CAP的3进2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#BASE"><span class="nav-number">1.3.4.</span> <span class="nav-text">BASE</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSql数据库四大分类"><span class="nav-number">1.4.</span> <span class="nav-text">NoSql数据库四大分类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis入门介绍"><span class="nav-number">2.</span> <span class="nav-text">Redis入门介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#入门概述"><span class="nav-number">2.1.</span> <span class="nav-text">入门概述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-是什么"><span class="nav-number">2.1.1.</span> <span class="nav-text">1.是什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-能干嘛"><span class="nav-number">2.1.2.</span> <span class="nav-text">2.能干嘛</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-安装"><span class="nav-number">2.1.3.</span> <span class="nav-text">3.安装</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-启动"><span class="nav-number">2.1.4.</span> <span class="nav-text">4.启动</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-关闭"><span class="nav-number">2.1.5.</span> <span class="nav-text">5.关闭</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-Redis启动后杂项基础知识讲解"><span class="nav-number">2.1.6.</span> <span class="nav-text">6.Redis启动后杂项基础知识讲解</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis数据类型"><span class="nav-number">3.</span> <span class="nav-text">Redis数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、Redis的五大数据类型"><span class="nav-number">3.1.</span> <span class="nav-text">一、Redis的五大数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-string（字符串）"><span class="nav-number">3.1.1.</span> <span class="nav-text">1.string（字符串）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-hash（哈希，类似java里的Map）"><span class="nav-number">3.1.2.</span> <span class="nav-text">2.hash（哈希，类似java里的Map）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-list（列表）"><span class="nav-number">3.1.3.</span> <span class="nav-text">3.list（列表）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-set（集合）"><span class="nav-number">3.1.4.</span> <span class="nav-text">4.set（集合）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-zset-sorted-set：有序集合"><span class="nav-number">3.1.5.</span> <span class="nav-text">5.zset(sorted set：有序集合)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、常用命令（官网常用命令"><span class="nav-number">3.2.</span> <span class="nav-text">二、常用命令（官网常用命令)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#键（keys）"><span class="nav-number">3.2.1.</span> <span class="nav-text">键（keys）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字符串（String）"><span class="nav-number">3.2.2.</span> <span class="nav-text">字符串（String）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis列表-List"><span class="nav-number">3.2.3.</span> <span class="nav-text">Redis列表(List)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis集合-Set"><span class="nav-number">3.2.4.</span> <span class="nav-text">Redis集合(Set)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis哈希-Hash"><span class="nav-number">3.2.5.</span> <span class="nav-text">Redis哈希(Hash)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis有序集合Zset-sorted-set"><span class="nav-number">3.2.6.</span> <span class="nav-text">Redis有序集合Zset(sorted set)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解析配置文件"><span class="nav-number">4.</span> <span class="nav-text">解析配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-conf"><span class="nav-number">4.1.</span> <span class="nav-text">redis.conf</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis的持久化"><span class="nav-number">5.</span> <span class="nav-text">redis的持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB（Redis-DataBase）"><span class="nav-number">5.1.</span> <span class="nav-text">RDB（Redis DataBase）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF（Append-Only-File）"><span class="nav-number">5.2.</span> <span class="nav-text">AOF（Append Only File）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis的事务"><span class="nav-number">6.</span> <span class="nav-text">Redis的事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis的发布订阅"><span class="nav-number">7.</span> <span class="nav-text">Redis的发布订阅</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis的复制-Master-Slave"><span class="nav-number">8.</span> <span class="nav-text">Redis的复制(Master/Slave)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实现主从复制"><span class="nav-number">8.1.</span> <span class="nav-text">实现主从复制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#复制原理"><span class="nav-number">8.2.</span> <span class="nav-text">复制原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#哨兵模式-sentinel"><span class="nav-number">8.3.</span> <span class="nav-text">哨兵模式(sentinel)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#复制的缺点"><span class="nav-number">8.4.</span> <span class="nav-text">复制的缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis的Java客户端Jedis"><span class="nav-number">9.</span> <span class="nav-text">Redis的Java客户端Jedis</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Jedis所需要的jar包"><span class="nav-number">9.1.</span> <span class="nav-text">Jedis所需要的jar包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Jedis常用操作"><span class="nav-number">9.2.</span> <span class="nav-text">Jedis常用操作</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">LXF</span>
+</div>
+
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>访问总人数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>访问总量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (search_path.endsWith("json")) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("NaOH8NL17AjYbOepxnKUG7TB-gzGzoHsz", "xbyl0HI68LNhYVNb8BJf6Ynp");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+
+  
+
+<a href="https://github.com/lxfgit/lxfgit.github.io"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/8b6b8ccc6da3aa5722903da7b58eb5ab1081adee/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"></a>
+</body>
+</html>
