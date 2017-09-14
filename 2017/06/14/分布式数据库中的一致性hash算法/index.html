@@ -106,7 +106,7 @@
 <meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1505354354/删除_rj3cz5.png">
 <meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1505354353/结点数据映射hash环_o3a4xa.png">
 <meta property="og:image" content="http://res.cloudinary.com/drqf361hz/image/upload/v1505354356/查询hash_jafwml.png">
-<meta property="og:updated_time" content="2017-09-14T02:22:57.000Z">
+<meta property="og:updated_time" content="2017-09-14T02:24:28.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式数据库中的一致性hash算法">
 <meta name="twitter:description" content="没有实力的愤怒是毫无意义的在分布式环境中，由于数据量庞大，往往需要对数据做分区，分区有两种：一种是range分区，另一种是hash分区。顾名思义，hash分区是采用hash算法，将数据划分到不同的分区中，采用传统的hash算法能有效地将数据划分到不同的分区，但是，传统的hash算法在机器上下线时，由于hash映射的变化，会导致大量的数据发生迁移。一致性hash算法（consistent hash）">
@@ -501,6 +501,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Hash(“192.168.1.100#1”);     // NODE1-1</div><div class="line">Hash(“192.168.1.100#2”);     // NODE1-2</div></pre></td></tr></table></figure>
 </li>
 </ol>
+<p><strong>参考</strong><br><a href="http://blog.csdn.net/cywosp/article/details/23397179" target="_blank" rel="external">http://blog.csdn.net/cywosp/article/details/23397179</a></p>
 
       
     </div>
