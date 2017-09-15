@@ -96,7 +96,7 @@
 <meta property="og:title" content="WEB常见性能优化策略">
 <meta property="og:url" content="http://yoursite.com/2017/09/15/WEB常见性能优化策略/index.html">
 <meta property="og:site_name" content="平民">
-<meta property="og:updated_time" content="2017-09-15T03:28:54.000Z">
+<meta property="og:updated_time" content="2017-09-15T03:31:05.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="WEB常见性能优化策略">
 
@@ -493,6 +493,7 @@
 <li><strong>限流</strong>，给线程池一个固定的容量，达到这个容量值后再有任务进来，就进入队列进行排队，保障机器极限压力下的稳定处理能力在使用JDK自带的线程池时，一定要仔细理解构造方法的各个参数的含义，如core pool size、max pool size、keepAliveTime、worker queue等，在理解的基础上通过不断地测试调整这些参数值达到最优效果。</li>
 </ul>
 <p>如果单机的处理能力不能满足需求，这个时候需要使用多机多线程的方式。这个时候就需要一些分布式系统的知识了。首先就必须引入一个单独的节点，作为调度器，其他的机器节点都作为执行器节点。调度器来负责拆分任务，和分发任务到合适的执行器节点；执行器节点按照多线程的方式（也可能是单线程）来执行任务。这个时候，我们整个任务系统就由单击演变成一个集群的系统，而且不同的机器节点有不同的角色，各司其职，各个节点之间还有交互。这个时候除了有多线程、线程池等机制，像RPC、心跳等网络通信调用的机制也不可少。后续我会出一个简单的分布式调度运行的框架。</p>
+<p><strong>转载：</strong><br><a href="https://tech.meituan.com/performance_tunning.html" target="_blank" rel="external">https://tech.meituan.com/performance_tunning.html</a></p>
 
       
     </div>
