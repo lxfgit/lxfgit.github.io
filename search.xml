@@ -1,138 +1,970 @@
 <?xml version="1.0" encoding="utf-8"?>
-<search>
-  <entry>
-    <title><![CDATA[WEB常见性能优化策略]]></title>
-    <url>%2F2017%2F09%2F15%2FWEB%E5%B8%B8%E8%A7%81%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%AD%96%E7%95%A5%2F</url>
-    <content type="text"><![CDATA[代码之所以把代码放到第一位，是因为这一点最容易引起技术人员的忽视。很多技术人员拿到一个性能优化的需求以后，言必称缓存、异步、JVM等。实际上，第一步就应该是分析相关的代码，找出相应的瓶颈，再来考虑具体的优化策略。有一些性能问题，完全是由于代码写的不合理，通过直接修改一下代码就能解决问题的，比如for循环次数过多、作了很多无谓的条件判断、相同逻辑重复多次等。 数据库数据库的调优，总的来说分为以下三部分： SQL调优这是最常用、每一个技术人员都应该掌握基本的SQL调优手段（包括方法、工具、辅助系统等）。这里以MySQL为例，最常见的方式是，由自带的慢查询日志或者开源的慢查询系统定位到具体的出问题的SQL，然后使用explain、profile等工具来逐步调优，最后经过测试达到效果后上线。这方面的细节，可以参考MySQL索引原理及慢查询优化。 架构层面的调优这一类调优包括读写分离、多从库负载均衡、水平和垂直分库分表等方面，一般需要的改动较大，但是频率没有SQL调优高，而且一般需要DBA来配合参与。那么什么时候需要做这些事情？我们可以通过内部监控报警系统（比如Zabbix），定期跟踪一些指标数据是否达到瓶颈，一旦达到瓶颈或者警戒值，就需要考虑这些事情。通常，DBA也会定期监控这些指标值。 连接池调优我们的应用为了实现数据库连接的高效获取、对数据库连接的限流等目的，通常会采用连接池类的方案，即每一个应用节点都管理了一个到各个数据库的连接池。随着业务访问量或者数据量的增长，原有的连接池参数可能不能很好地满足需求，这个时候就需要结合当前使用连接池的原理、具体的连接池监控数据和当前的业务量作一个综合的判断，通过反复的几次调试得到最终的调优参数。 缓存分类本地缓存（HashMap/ConcurrentHashMap、Ehcache、Guava Cache等），缓存服务（Redis/Tair/Memcache等）。 使用场景什么情况适合用缓存？考虑以下两种场景： 短时间内相同数据重复查询多次且数据更新不频繁，这个时候可以选择先从缓存查询，查询不到再从数据库加载并回设到缓存的方式。此种场景较适合用单机缓存。高并发查询热点数据，后端数据库不堪重负，可以用缓存来扛。 选型考虑 如果数据量小，并且不会频繁地增长又清空（这会导致频繁地垃圾回收），那么可以选择本地缓存。具体的话，如果需要一些策略的支持（比如缓存满的逐出策略），可以考虑Ehcache；如不需要，可以考虑HashMap；如需要考虑多线程并发的场景，可以考虑ConcurentHashMap。 其他情况，可以考虑缓存服务。目前从资源的投入度、可运维性、是否能动态扩容以及配套设施来考虑，我们优先考虑Tair。除非目前Tair还不能支持的场合（比如分布式锁、Hash类型的value），我们考虑Redis。 设计关键点什么时候更新缓存？如何保障更新的可靠性和实时性？更新缓存的策略，需要具体问题具体分析。这里以门店POI的缓存数据为例，来说明一下缓存服务型的缓存更新策略是怎样的？目前约10万个POI数据采用了Tair作为缓存服务，具体更新的策略有两个： 接收门店变更的消息，准实时更新。 给每一个POI缓存数据设置5分钟的过期时间，过期后从DB加载再回设到DB。这个策略是对第一个策略的有力补充，解决了手动变更DB不发消息、接消息更新程序临时出错等问题导致的第一个策略失效的问题。通过这种双保险机制，有效地保证了POI缓存数据的可靠性和实时性。 缓存是否会满，缓存满了怎么办？对于一个缓存服务，理论上来说，随着缓存数据的日益增多，在容量有限的情况下，缓存肯定有一天会满的。如何应对？ 给缓存服务，选择合适的缓存逐出算法，比如最常见的LRU。 针对当前设置的容量，设置适当的警戒值，比如10G的缓存，当缓存数据达到8G的时候，就开始发出报警，提前排查问题或者扩容。 给一些没有必要长期保存的key，尽量设置过期时间。 缓存是否允许丢失？丢失了怎么办？根据业务场景判断，是否允许丢失。如果不允许，就需要带持久化功能的缓存服务来支持，比如Redis或者Tair。更细节的话，可以根据业务对丢失时间的容忍度，还可以选择更具体的持久化策略，比如Redis的RDB或者AOF。 缓存被“击穿”问题对于一些设置了过期时间的key，如果这些key可能会在某些时间点被超高并发地访问，是一种非常“热点”的数据。这个时候，需要考虑另外一个问题：缓存被“击穿”的问题。 概念：缓存在某个时间点过期的时候，恰好在这个时间点对这个Key有大量的并发请求过来，这些请求发现缓存过期一般都会从后端DB加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端DB压垮。 如何解决：业界比较常用的做法，是使用mutex。简单地来说，就是在缓存失效的时候（判断拿出来的值为空），不是立即去load db，而是先使用缓存工具的某些带成功操作返回值的操作（比如Redis的SETNX或者Memcache的ADD）去set一个mutex key，当操作返回成功时，再进行load db的操作并回设缓存；否则，就重试整个get缓存的方法。类似下面的代码：12345678910111213141516public String get(key) &#123; String value = redis.get(key); if (value == null) &#123; //代表缓存值过期 //设置3min的超时，防止del操作失败的时候，下次缓存过期一直不能load db if (redis.setnx(key_mutex, 1, 3 * 60) == 1) &#123; //代表设置成功 value = db.get(key); redis.set(key, value, expire_secs); redis.del(key_mutex); &#125; else &#123; //这个时候代表同时候的其他线程已经load db并回设到缓存了，这时候重试获取缓存值即可 sleep(50); get(key); //重试 &#125; &#125; else &#123; return value; &#125;&#125; 异步使用场景针对某些客户端的请求，在服务端可能需要针对这些请求做一些附属的事情，这些事情其实用户并不关心或者用户不需要立即拿到这些事情的处理结果，这种情况就比较适合用异步的方式处理这些事情。 作用 缩短接口响应时间，使用户的请求快速返回，用户体验更好。 避免线程长时间处于运行状态，这样会引起服务线程池的可用线程长时间不够用，进而引起线程池任务队列长度增大，从而阻塞更多请求任务，使得更多请求得不到技术处理。 线程长时间处于运行状态，可能还会引起系统Load、CPU使用率、机器整体性能下降等一系列问题，甚至引发雪崩。异步的思路可以在不增加机器数和CPU数的情况下，有效解决这个问题。 常见做法一种做法，是额外开辟线程，这里可以采用额外开辟一个线程或者使用线程池的做法，在IO线程（处理请求响应）之外的线程来处理相应的任务，在IO线程中让response先返回。 如果异步线程处理的任务设计的数据量非常巨大，那么可以引入阻塞队列BlockingQueue作进一步的优化。具体做法是让一批异步线程不断地往阻塞队列里扔数据，然后额外起一个处理线程，循环批量从队列里拿预设大小的一批数据，来进行批处理（比如发一个批量的远程服务请求），这样进一步提高了性能。 另一种做法，是使用消息队列（MQ）中间件服务，MQ天生就是异步的。一些额外的任务，可能不需要我这个系统来处理，但是需要其他系统来处理。这个时候可以先把它封装成一个消息，扔到消息队列里面，通过消息中间件的可靠性保证把消息投递到关心它的系统，然后让这个系统来做相应的处理。 比如C端在完成一个提单动作以后，可能需要其它端做一系列的事情，但是这些事情的结果不会立刻对C端用户产生影响，那么就可以先把C端下单的请求响应先返回给用户，返回之前往MQ中发一个消息即可。而且这些事情理应不是C端的负责范围，所以这个时候用MQ的方式，来解决这个问题最合适。 NoSQL和缓存的区别先说明一下，这里介绍的和缓存那一节不一样，虽然可能会使用一样的数据存储方案（比如Redis或者Tair），但是使用的方式不一样，这一节介绍的是把它作为DB来用。如果当作DB来用，需要有效保证数据存储方案的可用性、可靠性。 使用场景需要结合具体的业务场景，看这块业务涉及的数据是否适合用NoSQL来存储，对数据的操作方式是否适合用NoSQL的方式来操作，或者是否需要用到NoSQL的一些额外特性（比如原子加减等）。 如果业务数据不需要和其他数据作关联，不需要事务或者外键之类的支持，而且有可能写入会异常频繁，这个时候就比较适合用NoSQL（比如HBase）。 比如，美团点评内部有一个对exception做的监控系统，如果在应用系统发生严重故障的时候，可能会短时间产生大量exception数据，这个时候如果选用MySQL，会造成MySQL的瞬间写压力飙升，容易导致MySQL服务器的性能急剧恶化以及主从同步延迟之类的问题，这种场景就比较适合用Hbase类似的NoSQL来存储。 JVM调优什么时候调？通过监控系统（如没有现成的系统，自己做一个简单的上报监控的系统也很容易）上对一些机器关键指标（gc time、gc count、各个分代的内存大小变化、机器的Load值与CPU使用率、JVM的线程数等）的监控报警，也可以看gc log和jstat等命令的输出，再结合线上JVM进程服务的一些关键接口的性能数据和请求体验，基本上就能定位出当前的JVM是否有问题，以及是否需要调优。 怎么调？ 如果发现高峰期CPU使用率与Load值偏大，这个时候可以观察一些JVM的thread count以及gc count（可能主要是young gc count），如果这两个值都比以往偏大（也可以和一个历史经验值作对比），基本上可以定位是young gc频率过高导致，这个时候可以通过适当增大young区大小或者占比的方式来解决。 如果发现关键接口响应时间很慢，可以结合gc time以及gc log中的stop the world的时间，看一下整个应用的stop the world的时间是不是比较多。如果是，可能需要减少总的gc time，具体可以从减小gc的次数和减小单次gc的时间这两个维度来考虑，一般来说，这两个因素是一对互斥因素，我们需要根据实际的监控数据来调整相应的参数（比如新生代与老生代比值、eden与survivor比值、MTT值、触发cms回收的old区比率阈值等）来达到一个最优值。 如果发生full gc或者old cms gc非常频繁，通常这种情况会诱发STW的时间相应加长，从而也会导致接口响应时间变慢。这种情况，大概率是出现了“内存泄露”，Java里的内存泄露指的是一些应该释放的对象没有被释放掉（还有引用拉着它）。那么这些对象是如何产生的呢？为啥不会释放呢？对应的代码是不是出问题了？问题的关键是搞明白这个，找到相应的代码，然后对症下药。所以问题的关键是转化成寻找这些对象。怎么找？综合使用jmap和MAT，基本就能定位到具体的代码。 多线程与分布式使用场景离线任务、异步任务、大数据任务、耗时较长任务的运行**，适当地利用，可达到加速的效果。 注意：线上对响应时间要求较高的场合，尽量少用多线程，尤其是服务线程需要等待任务线程的场合（很多重大事故就是和这个息息相关），如果一定要用，可以对服务线程设置一个最大等待时间。 常见做法如果单机的处理能力可以满足实际业务的需求，那么尽可能地使用单机多线程的处理方式，减少复杂性；反之，则需要使用多机多线程的方式。 对于单机多线程，可以引入线程池的机制，作用有二： 提高性能，节省线程创建和销毁的开销 限流，给线程池一个固定的容量，达到这个容量值后再有任务进来，就进入队列进行排队，保障机器极限压力下的稳定处理能力在使用JDK自带的线程池时，一定要仔细理解构造方法的各个参数的含义，如core pool size、max pool size、keepAliveTime、worker queue等，在理解的基础上通过不断地测试调整这些参数值达到最优效果。 如果单机的处理能力不能满足需求，这个时候需要使用多机多线程的方式。这个时候就需要一些分布式系统的知识了。首先就必须引入一个单独的节点，作为调度器，其他的机器节点都作为执行器节点。调度器来负责拆分任务，和分发任务到合适的执行器节点；执行器节点按照多线程的方式（也可能是单线程）来执行任务。这个时候，我们整个任务系统就由单击演变成一个集群的系统，而且不同的机器节点有不同的角色，各司其职，各个节点之间还有交互。这个时候除了有多线程、线程池等机制，像RPC、心跳等网络通信调用的机制也不可少。后续我会出一个简单的分布式调度运行的框架。 转载：https://tech.meituan.com/performance_tunning.html]]></content>
-      <categories>
-        <category>Web开发</category>
-        <category>优化</category>
-      </categories>
-  </entry>
-  <entry>
-    <title><![CDATA[缓存岁月]]></title>
-    <url>%2F2017%2F09%2F14%2F%E7%BC%93%E5%AD%98%E5%B2%81%E6%9C%88%2F</url>
-    <content type="text"><![CDATA[缓存特征命中率命中率=返回正确结果数/请求缓存次数，命中率问题是缓存中的一个非常重要的问题，它是衡量缓存有效性的重要指标。命中率越高，表明缓存的使用率越高。 最大元素（或最大空间）缓存中可以存放的最大元素的数量，一旦缓存中元素数量超过这个值（或者缓存数据所占空间超过其最大支持空间），那么将会触发缓存启动清空策略根据不同的场景合理的设置最大元素值往往可以一定程度上提高缓存的命中率，从而更有效的时候缓存。 清空策略如上描述，缓存的存储空间有限制，当缓存空间被用满时，如何保证在稳定服务的同时有效提升命中率？这就由缓存清空策略来处理，设计适合自身数据特征的清空策略能有效提升命中率。常见的一般策略有： 1、FIFO(first in first out)先进先出策略，最先进入缓存的数据在缓存空间不够的情况下（超出最大元素限制）会被优先被清除掉，以腾出新的空间接受新的数据。策略算法主要比较缓存元素的创建时间。在数据实效性要求场景下可选择该类策略，优先保障最新数据可用。 2、LFU(less frequently used)最少使用策略，无论是否过期，根据元素的被使用次数判断，清除使用次数较少的元素释放空间。策略算法主要比较元素的hitCount（命中次数）。在保证高频数据有效性场景下，可选择这类策略。 3、LRU(least recently used)最近最少使用策略，无论是否过期，根据元素最后一次被使用的时间戳，清除最远使用时间戳的元素释放空间。策略算法主要比较元素最近一次被get使用时间。在热点数据场景下较适用，优先保证热点数据的有效性。除此之外，还有一些简单策略比如： 根据过期时间判断，清理过期时间最长的元素； 根据过期时间判断，清理最近要过期的元素； 随机清理； 根据关键字（或元素内容）长短清理等。 缓存介质虽然从硬件介质上来看，无非就是内存和硬盘两种，但从技术上，可以分成内存、硬盘文件、数据库。 内存：将缓存存储于内存中是最快的选择，无需额外的I/O开销，但是内存的缺点是没有持久化落地物理磁盘，一旦应用异常break down而重新启动，数据很难或者无法复原。 硬盘：一般来说，很多缓存框架会结合使用内存和硬盘，在内存分配空间满了或是在异常的情况下，可以被动或主动的将内存空间数据持久化到硬盘中，达到释放空间或备份数据的目的。 数据库：前面有提到，增加缓存的策略的目的之一就是为了减少数据库的I/O压力。现在使用数据库做缓存介质是不是又回到了老问题上了？其实，数据库也有很多种类型，像那些不支持SQL，只是简单的key-value存储结构的特殊数据库（如BerkeleyDB和Redis），响应速度和吞吐量都远远高于我们常用的关系型数据库等。]]></content>
-  </entry>
-  <entry>
-    <title><![CDATA[Mysql主从数据库的配置]]></title>
-    <url>%2F2017%2F09%2F02%2FTomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE%2F</url>
-    <content type="text"><![CDATA[没有实力的发怒，是毫无意义的因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。]]></content>
-      <categories>
-        <category>数据库</category>
-        <category>Mysql</category>
-      </categories>
-      <tags>
-        <tag>Mysql</tag>
-        <tag>主从复制</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[分布式数据库中的一致性hash算法]]></title>
-    <url>%2F2017%2F06%2F14%2F%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7hash%E7%AE%97%E6%B3%95%2F</url>
-    <content type="text"><![CDATA[没有实力的愤怒是毫无意义的在分布式环境中，由于数据量庞大，往往需要对数据做分区，分区有两种：一种是range分区，另一种是hash分区。顾名思义，hash分区是采用hash算法，将数据划分到不同的分区中，采用传统的hash算法能有效地将数据划分到不同的分区，但是，传统的hash算法在机器上下线时，由于hash映射的变化，会导致大量的数据发生迁移。一致性hash算法（consistent hash）就是用力解决该问题。 基本场景比如你有N个cache服务器（后面简称 cache），那么如何将一个对象 object映射到N个cache上呢，你很可能会采用类似下面的通用方法计算 object的hash值，然后均匀的映射到到N个cache；1hash(object)%N 一切都运行正常，再考虑如下的两种情况； 一个cache服务器m down掉了（在实际应用中必须要考虑这种情况），这样所有映射到cache m 的对象都会失效，怎么办，需要把cache m 从 cache中移除，这时候cache是N-1台，映射公式变成了 1hash(object)%(N-1) 由于访问加重，需要添加cache，这时候 cache 是 N+1 台，映射公式变成了 1hash(object)%(N+1) 1 和 2 意味着什么？这意味着突然之间几乎所有的cache都失效了。对于服务器而言，这是一场灾难，洪水般的访问都会直接冲向后台服务器；再来考虑第三个问题； 由于硬件能力越来越强，你可能想让后面添加的节点多做点活，显然上 面的hash算法也做不到。有什么方法可以改变这个状况呢，这就是 consistent hashing… 哈希算法的判定标准 平衡性（Balance）：平衡性是指哈希的结果能够尽可能分布到所有的缓冲中去，这样可以使得所有的缓冲空间都得到利用。很多哈希算法都能够满足这一条件。 单调性（Monotonicity）：单调性是指如果已经有一些内容通过哈希分派到了相应的缓冲中，又有新的缓冲加入到系统中。哈希的结果应能够保证原有已分配的内容可以被映射到原有的或者新的缓冲中去，而不会被映射到旧的缓冲集合中的其他缓冲区。 分散性（Spread）：在分布式环境中，终端有可能看不到所有的缓冲，而是只能看到其中的一部分。当终端希望通过哈希过程将内容映射到缓冲上时，由于不同终端所见的缓冲范围有可能不同，从而导致哈希的结果不一致，最终的结果是相同的内容被不同的终端映射到不同的缓冲区中。这种情况显然是应该避免的，因为它导致相同内容被存储到不同缓冲中去，降低了系统存储的效率。分散性的定义就是上述情况发生的严重程度。好的哈希算法应能够尽量避免不一致的情况发生，也就是尽量降低分散性。 负载（Load）：负载问题实际上是从另一个角度看待分散性问题。既然不同的终端可能将相同的内容映射到不同的缓冲区中，那么对于一个特定的缓冲区而言，也可能被不同的用户映射为不同 的内容。与分散性一样，这种情况也是应当避免的，因此好的哈希算法应能够尽量降低缓冲的负荷。 在分布式集群中，对机器的添加删除，或者机器故障后自动脱离集群这些操作是分布式集群管理最基本的功能。如果采用常用的hash(object)%N算法，那么在有机器添加或者删除后，很多原有的数据就无法找到了，这样严重的违反了单调性原则。接下来说一下一致性哈希算法。 一致性哈希算法 环形Hash空间按照常用的 hash 算法来将对应的 key 哈希到一个具有 2^32 次方个桶的空间中，即 0 ~ (2^32) - 1 的数字空间中。现在我们可以将这些数字头尾相连，想象成一个闭合的环形。如下图： 把数据通过一定的 hash 算法处理后映射到环上现在我们将 object1、object2、object3、object4 四个对象通过特定的 Hash 函数计算出对应的 key 值，然后散列到 Hash 环上。如下图： 1234Hash(object1) = key1；Hash(object2) = key2；Hash(object3) = key3；Hash(object4) = key4； 将机器通过 hash 算法映射到环上在采用一致性哈希算法的分布式集群中将新的机器加入，其原理是通过使用与对象存储一样的 Hash 算法将机器也映射到环中（一般情况下对机器的 hash 计算是采用机器的IP或者机器唯一的别名作为输入值），然后以顺时针的方向计算，将所有对象存储到离自己最近的机器中。假设现在有 NODE1，NODE2，NODE3 三台机器，通过 Hash 算法得到对应的 KEY 值，映射到环中，其示意图如下： 123Hash(NODE1) = KEY1;Hash(NODE2) = KEY2;Hash(NODE3) = KEY3; 通过上图可以看出对象与机器处于同一哈希空间中，这样按顺时针转动 object1 存储到了 NODE1 中，object3 存储到了 NODE2 中，object2、object4 存储到了 NODE3 中。在这样的部署环境中，hash 环是不会变更的，因此，通过算出对象的 hash 值就能快速的定位到对应的机器中，这样就能找到对象真正的存储位置了。 机器的删除与添加普通 hash 求余算法最为不妥的地方就是在有机器的添加或者删除之后会造成大量的对象存储位置失效，这样就大大的不满足单调性了。下面来分析一下一致性哈希算法是如何处理的。 节点（机器）的删除以上面的分布为例，如果 NODE2 出现故障被删除了，那么按照顺时针迁移的方法，object3 将会被迁移到 NODE3 中，这样仅仅是 object3 的映射位置发生了变化，其它的对象没有任何的改动。如下图： 节点（机器）的添加如果往集群中添加一个新的节点 NODE4，通过对应的哈希算法得到 KEY4，并映射到环中，如下图： 通过按顺时针迁移的规则，那么 object2 被迁移到了 NODE4 中，其它对象还保持这原有的存储位置。通过对节点的添加和删除的分析，一致性哈希算法在保持了单调性的同时，还是数据的迁移达到了最小，这样的算法对分布式集群来说是非常合适的，避免了大量数据迁移，减小了服务器的的压力。 平衡性根据上面的图解分析，一致性哈希算法满足了单调性和负载均衡的特性以及一般 hash 算法的分散性，但这还并不能当做其被广泛应用的原由，因为还缺少了平衡性。下面将分析一致性哈希算法是如何满足平衡性的。hash 算法是不保证平衡的，如上面只部署了 NODE1 和NODE3 的情况（NODE2 被删除的图），object1 存储到了 NODE1 中，而 object2、object3、object4 都存储到了 NODE3 中，这样就照成了非常不平衡的状态。在一致性哈希算法中，为了尽可能的满足平衡性，其引入了虚拟节点 ——“虚拟节点”（ virtual node ）是实际节点（机器）在 hash 空间的复制品（ replication ），一实际个节点（机器）对应了若干个“虚拟节点”，这个对应个数也成为“复制个数”，“虚拟节点”在 hash 空间中以 hash 值排列。 以上面只部署了 NODE1 和 NODE3 的情况（NODE2 被删除的图）为例，之前的对象在机器上的分布很不均衡，现在我们以2个副本（复制个数）为例，这样整个 hash 环中就存在了4个虚拟节点，最后对象映射的关系图如下： 根据上图可知对象的映射关系：object1-&gt;NODE1-1，object2-&gt;NODE1-2，object3-&gt;NODE3-2，object4-&gt;NODE3-1。通过虚拟节点的引入，对象的分布就比较均衡了。那么在实际操作中，真正的对象查询是如何工作的呢？对象从 hash 到虚拟节点到实际节点的转换如下图： “虚拟节点”的 hash 计算可以采用对应节点的 IP 地址加数字后缀的方式。例如假设 NODE1 的 IP 地址为 192.168.1.100。引入“虚拟节点”前，计算 cache A 的 hash 值： 1Hash(“192.168.1.100”); 引入“虚拟节点”后，计算“虚拟节”点 NODE1-1 和 NODE1-2 的 hash 值： 12Hash(“192.168.1.100#1”); // NODE1-1Hash(“192.168.1.100#2”); // NODE1-2 参考http://blog.csdn.net/cywosp/article/details/23397179]]></content>
-      <categories>
-        <category>数据库</category>
-        <category>Redis</category>
-      </categories>
-      <tags>
-        <tag>一致性哈希算法</tag>
-        <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[致谢606实验室]]></title>
-    <url>%2F2017%2F06%2F07%2F%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4%2F</url>
-    <content type="text"><![CDATA[国事如今谁倚仗，衣带一江而已。待续]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-      <tags>
-        <tag>EGOV</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[我和Hexo的秘密]]></title>
-    <url>%2F2017%2F06%2F06%2F%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86%2F</url>
-    <content type="text"><![CDATA[劝君莫惜金缕衣，劝君惜取少年时2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。 流量统计下面的人数统计和访问统计是用的busuanzi 阅读次数文章的阅读次数用的是百度统计和leanCloud 图床本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。 站内搜索本站的站内搜索是采用hexo自带的local search 引用站内文章可以通过内置标签post_link实现 1&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125; 例如 引用hello.md 1&#123;% post_link Hello %&#125; 或者 1&#123;% post_link Hello 你好 %&#125; 常用命令本地部署，在localhost：4000 1hexo s 清除无用的标签，索引，分类 1hexo clean 更新部署 1hexo d -g]]></content>
-      <categories>
-        <category>Hexo相关</category>
-      </categories>
-      <tags>
-        <tag>hexo</tag>
-        <tag>博客</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[SpringMVC的执行流程]]></title>
-    <url>%2F2017%2F06%2F05%2FSpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%2F</url>
-    <content type="text"><![CDATA[三更灯火五更鸡，正是男儿读书时在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。 Spring MVC 工作流程图 SpringMVC 处理请求过程： 用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获； DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。 DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法） 提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作： HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等 数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中 Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象； 根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ； ViewResolver 结合Model和View，来渲染视图 将渲染结果返回给客户端。 Spring MVC工作流程图 UML时序图 组件说明:以下组件通常使用框架提供实现： DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。 HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。 HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。 ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。]]></content>
-      <categories>
-        <category>Web开发</category>
-        <category>Spring</category>
-      </categories>
-      <tags>
-        <tag>SpringMVC</tag>
-        <tag>SpringMVC执行流程</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[Spark On YARN集群环境搭建]]></title>
-    <url>%2F2017%2F06%2F02%2FSpark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%2F</url>
-    <content type="text"><![CDATA[尽人事，听天命 最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。 写在前面用户尽量使用带有root权限的用户，这里假设每个机器的用户是spark，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了，每个节点上的用户都是一样的，安装的路径也必须是一致的。 软件准备： Jdk Scala Hadoop Spark 这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异， 修改主机名我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为： 10.1.130.2110.1.130.2210.1.130.23 这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 vi /etc/hostname 21节点： 110.1.130.21 master 22节点： 110.1.130.22 salve1 23节点： 110.1.130.23 slave2 配置完主机名之后，需要重启生效。 然后就是修改每个节点的hosts文件，方法是vi /etc/hosts 每个节点都做同样的修改，添加如下配置： 12310.1.130.21 master10.1.130.22 salve110.1.130.23 slave2 配置完成后，需要互ping一下，检查是否成功， 1spark@master$ ping slave1 #从master ping slave1，其他的类似 SSH免密登录如果机器没有安装ssh服务可以安装一下： 1sudo apt-get install openssh-server 免密登录，可以参考之间的方法 SSH免密登录 Java和Scala的安装以下所有的安装都是在master节点上进行的。 从官网下载最新版Java和Scala就可以，它们的安装方式差不多， Java的安装在你想要的安装的目录下解压,这里我们在自己用户下新建一个文件夹叫做app，注意不要用sudo来建立,直接在每一个节点下mkdir app就行了，将源文件放在app中，然后解压。 12cd apptar -zxvf jdk-7u75-linux-x64.gz 修改环境变量vi .bashrc, 添加下列内容,注意这里spark是你的用户名，即在你的户用文件夹下。 12345export WORK_SPACE=/home/spark/app/export JAVA_HOME=$WORK_SPACE/jdk1.7.0_75export JRE_HOME=/home/spark/work/jdk1.7.0_75/jreexport PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATHexport CLASSPATH=$CLASSPATH:.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib 生效环境变量 1$ source .bashrc 查看java版本，如果打印出如下版本信息，则说明安装成功 1234$ java -version java version "1.7.0_75"Java(TM) SE Runtime Environment (build 1.7.0_75-b13)Java HotSpot(TM) 64-Bit Server VM (build 24.75-b04, mixed mode) Scala的安装Scala 的安装也是一样的，同样解压在app文件夹下，配置环境变量： 12export SCALA_HOME=$WORK_SPACE/scala-2.10.4export PATH=$PATH:$SCALA_HOME/bin 生效环境变量 1$ source .bashrc 查看Scala版本，如果打印出如下版本信息，则说明安装成功 12$ scala -version Scala code runner version 2.10.4 -- Copyright 2002-2013, LAMP/EPFL 至此，我们的Java和Scala的安装工作就结束了，我们需要将安装的目录分发到slave1和slave2中，同时slave1和slave2的环境变量也需要像master中一样配置.分发 1234scp -r ~/app/jdk1.7.0_75 spark@slave1:~/app/scp -r ~/app/jdk1.7.0_75 spark@slave2:~/app/scp -r ~/app/scala-2.10.4 spark@slave1:~/app/scp -r ~/app/scala-2.10.4 spark@slave1:~/app/ 修改slave1和slave2环境的环境变量，可以直接复制。然后在slave1和slave2中分别测试一下有没有安装成功。 安装配置 Hadoop YARN下载解压从官网下载hadoop,这里我们以 hadoop2.6.0 版本为例。 同样我们在~/app中解压 1tar -zxvf hadoop-2.6.0.tar.gz 配置Hadoop同样我们可以在 .bashrc中配置Hadoop的环境变量 123export HADOOP_HOME=/home/spark/app/hadoop-2.6.0export PATH=$PATH:$HADOOP_HOME/binexport PATH=$PATH:$HADOOP_HOME/sbin 需要配置的配置文件都在hadoop根目录下的etc/hadoop中，一共需要配置7个文件： 1234567hadoop-env.shyarn-env.shslavescore-site.xmlhdfs-site.xmlmaprd-site.xmlyarn-site.xml 在hadoop-env.sh中配置JAVA_HOME 1export JAVA_HOME=/home/spark/app/jdk1.7.0_75 在yarn-env.sh中配置JAVA_HOME 1export JAVA_HOME=/home/spark/app/jdk1.7.0_75 在slaves中配置slave节点的ip或者host， 12slave1slave2 修改core-site.xml 1234567891011&lt;configuration&gt; &lt;property&gt; &lt;name&gt;fs.defaultFS&lt;/name&gt; &lt;value&gt;hdfs://master:9000/&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;hadoop.tmp.dir&lt;/name&gt; &lt;value&gt;file:/home/spark/workspace/hadoop-2.6.0/tmp&lt;/value&gt; &lt;description&gt;Abase for other temporary directories.&lt;/description&gt; &lt;/property&gt;&lt;/configuration&gt; 修改hdfs-site.xml 12345678910111213141516171819202122&lt;configuration&gt; &lt;property&gt; &lt;name&gt;dfs.namenode.secondary.http-address&lt;/name&gt; &lt;value&gt;master:9001&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt; &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/name&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt; &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/data&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.replication&lt;/name&gt; &lt;value&gt;3&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;dfs.namenode.datanode.registration.ip-hostname-check&lt;/name&gt; &lt;value&gt;false&lt;/value&gt; &lt;/property&gt;&lt;/configuration&gt; 修改mapred-site.xml 123456&lt;configuration&gt; &lt;property&gt; &lt;name&gt;mapreduce.framework.name&lt;/name&gt; &lt;value&gt;yarn&lt;/value&gt; &lt;/property&gt;&lt;/configuration&gt; 修改yarn-site.xml 123456789101112131415161718192021222324252627282930313233343536373839404142&lt;configuration&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt; &lt;value&gt;mapreduce_shuffle&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt; &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.pmem-check-enabled&lt;/name&gt; &lt;value&gt;false&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.nodemanager.vmem-check-enabled&lt;/name&gt; &lt;value&gt;false&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt; &lt;value&gt;amdnode0&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.address&lt;/name&gt; &lt;value&gt;master:8032&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt; &lt;value&gt;master:8030&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt; &lt;value&gt;master:8035&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.admin.address&lt;/name&gt; &lt;value&gt;master:8033&lt;/value&gt; &lt;/property&gt; &lt;property&gt; &lt;name&gt;yarn.resourcemanager.webapp.address&lt;/name&gt; &lt;value&gt;master:8088&lt;/value&gt; &lt;/property&gt;&lt;/configuration&gt; 这是我自己的配置，大家可以根据自己的需要修改，将配置好的hadoop-2.6.0文件夹分发给所有slaves吧。 12scp -r ~/app/hadoop-2.6.0 spark@slave1:~/app/scp -r ~/app/hadoop-2.6.0 spark@slave2:~/app/ 启动Hadoop在 master 上执行以下操作，就可以启动 hadoop 了,因为我们配置了Hadoop的环境变量所以就可以在任意目录下启动Hadoop了。 12start-dfs.sh #启动dfs,如果没有配置的话就是sbin/start-dfs.sh start-yarn.sh #启动yarn,如果没有配置的话就是sbin/start-yarn.sh 验证 Hadoop 是否安装成功可以通过jps命令查看各个节点启动的进程是否正常。在 master 上应该有以下几个进程： 12345$ jps #run on master3407 SecondaryNameNode3218 NameNode3552 ResourceManager3910 Jps 在每个slave上应该有以下几个进程： 1234$ jps #run on slaves2072 NodeManager2213 Jps1962 DataNode 或者在浏览器中输入 http://master:8088 ，应该有 hadoop 的管理界面出来了，并能看到 slave1 和 slave2 节点。也可以通过 1hadoop dfsadmin -report 查看节点使用情况。 Spark安装下载解压进入官方下载地址下载最新版Spark。我下载的是 spark-1.3.0-bin-hadoop2.4.tgz。 在~/app目录下解压 12tar -zxvf spark-1.3.0-bin-hadoop2.4.tgzmv spark-1.3.0-bin-hadoop2.4 spark-1.3.0 #如果觉得原来的文件名太长了，可以修改下 配置 Sparkspark的配置文件在spark根目录下的conf中, Spark需要修改的配置文件只有两个： 12spark-env.sh slaves 在conf目录下将spark-env.sh.template复制成spark-env.sh 123cd ~/app/spark-1.3.0/conf #进入spark配置目录cp spark-env.sh.template spark-env.sh #从配置模板复制vi spark-env.sh #添加配置内容 在spark-env.sh末尾添加以下内容（这是我的配置，你可以自行修改）： 1234567export SCALA_HOME=/home/spark/app/scala-2.10.4export JAVA_HOME=/home/spark/app/jdk1.7.0_75export HADOOP_HOME=/home/spark/app/hadoop-2.6.0export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoopSPARK_MASTER_IP=masterSPARK_LOCAL_DIRS=/home/spark/app/spark-1.3.0SPARK_DRIVER_MEMORY=1G 注：在设置Worker进程的CPU个数和内存大小，要注意机器的实际硬件条件，如果配置的超过当前Worker节点的硬件条件，Worker进程会启动失败。 修改slaves文件下slaves的主机名： 12slave1slave2 将配置好的spark-1.3.0文件夹分发给所有slaves吧 12scp -r ~/app/spark-1.3.0 spark@slave1:~/workspace/scp -r ~/app/spark-1.3.0 spark@slave2:~/workspace/ 启动Spark在spark的根目录下： 1sbin/start-all.sh 验证 Spark 是否安装成功用jps检查，在 master 上应该有以下几个进程： 123456$ jps7949 Jps7328 SecondaryNameNode7805 Master7137 NameNode7475 ResourceManager 在 slave 上应该有以下几个进程： 12345$jps3132 DataNode3759 Worker3858 Jps3231 NodeManager 也可以进入Spark的Web管理页面： http://master:8080 注意：三个节点的防火墙要关掉，不然很容易出错，这里中间很多的细节都没有涉及到，只是个大概的流程，我相信，每个人刚学的时候都不会一次性的成功，但是者未必不是好事，有些坑是需要踩过才知道，这里有很多的坑，祝大家早日脱坑。]]></content>
-      <categories>
-        <category>分布式系统</category>
-      </categories>
-      <tags>
-        <tag>Spark</tag>
-        <tag>YARN</tag>
-        <tag>分布式环境搭建</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[SSH免密登录]]></title>
-    <url>%2F2017%2F05%2F31%2FSSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%2F</url>
-    <content type="text"><![CDATA[纸上得来终觉浅，要知此事须躬行在配置集群的时候，ssh免密登录时第一步。其实linux免密登录很简单，四步就可以解决问题 准备假设有两台机器他们的IP和主机名是：M1-IP：10.1.130.2 主机名：m1M2-IP：10.1.130.3 主机名：m2如果想要更改主机名，可以在每台机器的/etc/hostname中更改，但是需要重启生效。 映射主机名每个机器都进入 /etc/hosts ，并添加所有的主机名和IP映射1210.1.130.2 m110.1.130.3 m2 生成公钥执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 ~/.ssh 下面，名为id_rsa.pub。1ssh-keygen -t rsa 汇总公钥 汇总公钥至同一机器（为了方面下一步），假如在m2中将公钥复制到m1。 1scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2 将公钥合并至 authorized_keys 1cat id_rsa.pub* &gt;&gt;authorized_keys 分发公钥1scp authorized_keys m2@10.1.1130.3:~/.ssh 大工告成]]></content>
-      <categories>
-        <category>Linux</category>
-      </categories>
-      <tags>
-        <tag>免密登录</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[HDFS常用命令]]></title>
-    <url>%2F2017%2F05%2F31%2FHDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
-    <content type="text"><![CDATA[衣带渐宽终不悔，为伊消得人憔悴 文件操作 建立目录12hadoop dfs -mkdir -p /user/hadoop/examples #加上-p是所有目录都要建立eadoop dfs -mkdir /user/hadoop/examples1 #建立examples1目录 删除目录12hadoop dfs -rm -r /user/hadoop/examples #加上-r，删除exampleshadoop dfs -rm -r /user #删除user目录 列出HDFS下的文件(夹) 12hadoop dfs -ls / #查看hdfs根目录下的文件夹(文件)hadoop dfs -ls /user/data #查看某个目录下的文件夹(文件) 查看文件内容 1hadoop dfs -cat /user/data/in/word.txt #查看文件内容，必须是一个文件，不能时目录 将hdfs上的文件(夹)复制到本地的文件系统 123456hadoop dfs -get /user/data rename #将data目录复制到当前执行该命令的本地文件系统，并重命名为renamehadoop dfs -get /user/data /home/user/data rename #将data目录复制到本地指定目录下，并重命名为renamehadoop dfs -get /user/data /home/user/data/core-site.xml /home/user/data/rename.xml #将core-site.xml复制到本地指定目录下，并重命名为rename.xmlhadoop dfs -getmerger /user/data/in merge.xml #将hdfs中某个目录下的的文件合并并下载到本地当前目录 将本地文件系统上传到hdfs上 1hadoop dfs -put file /user/data 管理与更新 执行基本信息, 查看HDFS的基本统计信息: 1hadoop dfsadmin -report HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布: 1hadoop$bin/start-balancer.sh]]></content>
-      <categories>
-        <category>分布式系统</category>
-      </categories>
-      <tags>
-        <tag>hadoop</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[Git常用命令]]></title>
-    <url>%2F2017%2F05%2F31%2FGit%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%2F</url>
-    <content type="text"><![CDATA[优秀的人，不是不合群，而是他们合群的人里面没有你 获取仓库 初始化一个版本仓库1git init Clone远程版本库 1git clone git@xbc.me:wordpress.git 添加远程版本库origin，语法为 git remote add [shortname] [url] 1git remote add origin git@xbc.me:wordpress.git 查看远程仓库 1git remote -v 提交修改 添加当前修改的文件到暂存区 1git add . 如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件 1git add -u 提交你的修改 1git commit –m "你的注释" 推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支] 1git push origin master 查看文件状态 1git status 跟踪新文件 1git add readme.txt 从当前跟踪列表移除文件，并完全删除 1git rm readme.txt 仅在暂存区删除，保留文件在当前目录，不再跟踪 1git rm –cached readme.txt 重命名文件 1git mv reademe.txt readme 查看提交的历史记录 1git log 修改最后一次提交注释的，利用–amend参数 1git commit --amend 忘记提交某些修改，下面的三条命令只会得到一个提交 123git commit –m "add readme.txt"git add readme_forgottengit commit –amend 假设你已经使用git add .，将修改过的文件a、b加到暂存区现在你只想提交a文件，不想提交b文件，应该这样 1git reset HEAD b 取消对文件的修改 1git checkout –- readme.txt 分支管理 创建一个分支 1git branch iss53 切换工作目录到iss53 1git chekcout iss53 将上面的命令合在一起，创建iss53分支并切换到iss53 1git chekcout –b iss53 合并iss53分支，当前工作目录为master 1git merge iss53 合并完成后，没有出现冲突，删除iss53分支 1git branch –d iss53 拉去远程仓库的数据，语法为 git fetch [remote-name] 1git fetch fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并 1git pull 查看远程仓库的信息 1git remote show origin 建立本地的dev分支追踪远程仓库的develop分支 1git checkout –b dev origin/develop+ #分支管理]]></content>
-      <categories>
-        <category>Git</category>
-      </categories>
-      <tags>
-        <tag>git</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[Redis概述]]></title>
-    <url>%2F2017%2F05%2F13%2FRedis%E6%A6%82%E8%BF%B0%2F</url>
-    <content type="text"><![CDATA[逃避未必能躲过，面对未必最难过在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。 NoSql的概述NoSql简述传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。 NoSql数据库模型简介聚合模型：KV键值对,BSON，列族，图形 在分布式数据库中CAP原理CAP+BASE传统的ACID分别是什么1234A (Atomicity) 原子性C (Consistency) 一致性I (Isolation) 独立性D (Durability) 持久性 分布式数据库CAP123C:Consistency（强一致性）A:Availability（可用性）P:Partition tolerance（分区容错性） 123CA: 传统Oracle数据库 AP: 大多数网站架构的选择 CP: Redis、Mongodb CAP的3进2CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，最多只能同时较好的满足两个。因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类： 123CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。CP - 满足一致性，分区容忍必的系统，通常性能不是特别高。AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。 BASEBASE就是为了解决关系数据库强一致性引起的问题而引起的可用性降低而提出的解决方案。BASE其实是下面三个术语的缩写：123基本可用（Basically Available）软状态（Soft state）最终一致（Eventually consistent） 它的思想是通过让系统放松对某一时刻数据一致性的要求来换取系统整体伸缩性和性能上改观。为什么这么说呢，缘由就在于大型系统往往由于地域分布和极高性能的要求，不可能采用分布式事务来完成这些指标，要想获得这些指标，我们必须采用另外一种方式来完成，这里BASE就是解决这个问题的办法. NoSql数据库四大分类 KV键值：典型介绍 123新浪：BerkeleyDB+redis美团：redis+tair阿里、百度：memcache+redis 文档型数据库(bson格式比较多)：典型介绍 12CouchDBMongoDB 列存储数据库 123CassandraHBase分布式文件系统 图关系数据库它不是放图形的，放的是关系比如:朋友圈社交网络、广告推荐系统、社交网络，推荐系统等。专注于构建关系图谱 12Neo4JInfoGrid Redis入门介绍入门概述1.是什么Redis:REmote DIctionary Server(远程字典服务器)是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key/value)分布式内存数据库，基于内存运行,并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一,也被人们称为数据结构服务器。Redis 与其他 key - value 缓存产品有以下三个特点: Redis支持数据的持久化，可以将内存中的数据保持在磁盘中，重启的时候可以再次加载进行使用。 Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储。 Redis支持数据的备份，即master-slave模式的数据备份。 2.能干嘛 内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务 取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面 模拟类似于HttpSession这种需要设定过期时间的功能 发布、订阅消息系统 定时器、计数器 3.安装Linux版安装下载获得redis-3.0.4.tar.gz后将它放入我们的Linux目录/opt/opt目录下，解压命令:tar -zxvf redis-3.0.4.tar.gz解压完成后出现文件夹：redis-3.0.4进入目录:cd redis-3.0.4在redis-3.0.4目录下执行make命令 4.启动修改redis.conf文件将里面的daemonize no 改成 yes，让服务在后台启动将默认的redis.conf拷贝到自己定义好的一个路径下，比如/myconf启动: redis-server /myconf/redis.conf, redis-cli连通测试:/usr/local/bin目录下运行redis-server，运行拷贝出存放了自定义conf文件目录下的redis.conf文件 5.关闭12单实例关闭：redis-cli shutdown多实例关闭，指定端口关闭:redis-cli -p 6379 shutdown 6.Redis启动后杂项基础知识讲解 单进程:单进程模型来处理客户端的请求。对读写等事件的响应,是通过对epoll函数的包装来做到的。Redis的实际处理速度完全依靠主进程的执行效率,epoll是Linux内核为处理大批量文件描述符而作了改进的epoll，是Linux下多路复用IO接口select/poll的增强版本，它能显著提高程序在大量并发连接中只有少量活跃的情况下的系统CPU利用率。 默认16个数据库，类似数组下表从零开始，初始默认使用零号库 select命令切换数据库 dbsize查看当前数据库的key的数量 flushdb：清空当前库 Flushall:通杀全部库 统一密码管理，16个库都是同样密码，要么都OK要么一个也连接不上 Redis索引都是从零开始 为什么默认端口是6379 Redis数据类型一、Redis的五大数据类型1.string（字符串） string是redis最基本的类型，你可以理解成与Memcached一模一样的类型，一个key对应一个value。 string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。 string类型是Redis最基本的数据类型，一个redis中字符串value最多可以是512M。 2.hash（哈希，类似java里的Map） Redis hash 是一个键值对集合。 Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象。 类似Java里面的Map 3.list（列表） Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素导列表的头部（左边）或者尾部（右边）。 底层实际是个链表。 4.set（集合） Redis的Set是string类型的无序集合。它是通过HashTable实现实现的。 5.zset(sorted set：有序集合) Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。不同的是每个元素都会关联一个double类型的分数。 redis正是通过分数来为集合中的成员进行从小到大的排序。zset的成员是唯一的,但分数(score)却可以重复。 二、常用命令（官网常用命令)键（keys）123456789101112#获取当前库的全部键keys *#判断某个key是否存在exists key#当前库就没有了，被移除了move key db#为给定的key设置过期时间expire key 秒钟#查看还有多少秒过期，-1表示永不过期，-2表示已过期ttl key #查看你的key是什么类型type key 字符串（String）它是单值单value的12345678910111213141516set/get/del/append/strlen#一定要是数字才能进行加减Incr/decr/incrby/decrby#获取指定区间范围内的值，类似between......and的关系，从零到负一表示全部getrange#设置指定区间范围内的值，格式是setrange key值 具体值setrangesetex(set with expire)键秒值/setnx(set if not exist)#同时设置一个或多个 key-value 对mset#获取所有(一个或多个)给定 key 的值mget#同时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在msetnx#先get再setgetset Redis列表(List)它是单值多value1234567891011lpush/rpush/lrangelpop/rpoplindex，按照索引下标获得元素(从上到下)llen#删N个valuelrem key #截取指定范围的值后再赋值给keyltrim key 开始index 结束indexrpoplpush 源列表 目的列表lset key index valuelinsert key before/after 值1 值2 性能总结:它是一个字符串链表，left、right都可以插入添加；如果键不存在，创建新的链表；如果键已存在，新增内容；如果值全移除，对应的键也就消失了。链表的操作无论是头和尾效率都极高，但假如是对中间元素进行操作，效率就很惨淡了。 Redis集合(Set)它是单值多value 1234567891011121314151617sadd/smembers/sismember#获取集合里面的元素个数scard#删除集合中元素srem key value #如果超过最大数量就全部取出，如果写的值是负数，比如-3 ，表示需要取出3个，但是可能会有重复值。srandmember key 某个整数(随机出几个数)#随机出栈spop key#作用是将key1里的某个值赋给key2smove key1 key2 在key1里某个值#在第一个set里面而不在后面任何一个set里面的项差集：sdiff#在第一个set里面并且在后面任何一个set里面的项交集：sinter#在第一个set里面或者在后面任何一个set里面的项并集：sunion Redis哈希(Hash)KV模式不变，但V是一个键值对 123456hset/hget/hmset/hmget/hgetall/hdelhlenhexists key 在key里面的某个值的keyhkeys/hvalshincrby/hincrbyfloathsetnx Redis有序集合Zset(sorted set)在set基础上，加一个score值。之前set是k1 v1 v2 v3，现在zset是k1 score1 v1 score2 v2 123456789101112131415zadd/zrange zrem key 某score下对应的value值，作用是删除元素#获取集合中元素个数zcard#获取分数区间内元素个数zcountzcount key 开始分数区间 结束分数区间#获取value在zset中的下标位置zrank#按照值获得对应的分数zscore#作用是逆序获得下标值zrevrank key values值，zrevrangezrevrangebyscore key 结束score 开始score 解析配置文件redis.conf GENERAL通用 12345678910111213141516171819daemonize:默认为no，改为yespidfileporttcp-backlog:设置tcp的backlog，backlog其实是一个连接队列，backlog队列总和=未完成三次握手队列 + 已经完成三次握手队列。在高并发环境下你需要一个高backlog值来避免慢客户端连接问题。注意Linux内核会将这个值减小到/proc/sys/net/core/somaxconn的值，所以需要确认增大somaxconn和tcp_max_syn_backlog两个值来达到想要的效果timeoutbind #单位为秒，如果设置为0，则不会进行Keepalive检测，建议设置成60 tcp-keepalive#日志级别loglevel#日志文件名logfile#是否把日志输出到syslog中syslog-enabled#指定syslog里的日志标志syslog-ident#指定syslog设备，值可以是USER或LOCAL0-LOCAL7syslog-facilitydatabases SNAPSHOTTING快照 12345678save save 秒钟 写操作次数 禁用stop-writes-on-bgsave-errorrdbcompressionrdbchecksumdbfilenamedir REPLICATION复制 SECURITY安全访问密码的查看、设置和取消 LIMITS限制 123456789101112131415161718192021#最大客户端个数maxclients#允许最大使用内存maxmemory#内存过期清除策略maxmemory-policy #使用LRU算法移除key，只对设置了过期时间的键 (1)volatile-lru #使用LRU算法移除key (2)allkeys-lru #在过期集合中移除随机的key，只对设置了过期时间的键 (3)volatile-random #移除随机的key (4)allkeys-random #移除那些TTL值最小的key，即那些最近要过期的key (5)volatile-ttl #不进行移除。针对写操作，只是返回错误信息 (6)noeviction#设置样本数量，LRU算法和最小TTL算法都并非是精确的算法，而是估算值，所以#你可以设置样本的大小，redis默认会检查这么多个key并选择其中LRU的那个。maxmemory-samples APPEND ONLY MODE追加 123456789101112131415161718#是否打开appendonly#文件名称appendfilename#追加策略appendfsync #同步持久化 每次发生数据变更会被立即记录到磁盘 性能较差但数据完整性比较好 (1)always #出厂默认推荐，异步操作，每秒记录 如果一秒内宕机，有数据丢失 (2)everysec #不追加，不推荐 (3)no#重写时是否可以运用Appendfsync，用默认no即可，保证数据安全性。no-appendfsync-on-rewrite #设置重写的基准值 (1)auto-aof-rewrite-min-size #设置重写的基准值 (2)auto-aof-rewrite-percentage 常见配置redis.conf介绍总结 Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程 1daemonize no 当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定。 1pidfile /var/run/redis.pid 指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字。 1port 6379 绑定的主机地址。 1bind 127.0.0.1 当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能。 1timeout 300 指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose。 1loglevel verbose 日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null。 1logfile stdout 设置数据库的数量，默认数据库为0，可以使用SELECT &lt;dbid&gt;命令在连接上指定数据库id。 1databases 16 指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合。 1save &lt;seconds&gt; &lt;changes&gt; Redis默认配置文件中提供了三个条件： 123456#900秒（15分钟）内有1个更改save 900 1#300秒（5分钟)内有10个更改save 300 10#60秒内有10000个更改save 60 10000 指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大。 1rdbcompression yes 指定本地数据库文件名，默认值为dump.rdb。 1dbfilename dump.rdb 指定本地数据库存放目录。 1dir ./ 设置当本机为slave服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步。 1slaveof &lt;masterip&gt; &lt;masterport&gt; 当master服务设置了密码保护时，slave服务连接master的密码。 1masterauth &lt;master-password&gt; 设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过AUTH &lt;password&gt;命令提供密码，默认关闭。 1requirepass foobared 设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息。 1maxclients 128 指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区。 1maxmemory &lt;bytes&gt; 指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no。 1appendonly no 指定更新日志文件名，默认为appendonly.aof 1appendfilename appendonly.aof 指定更新日志条件，共有3个可选值： 1234appendfsync everysecno：表示等操作系统进行数据缓存同步到磁盘（快） always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） everysec：表示每秒同步一次（折衷，默认值） 指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）。 1vm-enabled no 虚拟内存文件路径，默认值为/tmp/redis.swap，不可多个Redis实例共享。 1vm-swap-file /tmp/redis.swap 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0。 1vm-max-memory 0 Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值。 1vm-page-size 32 设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。 1vm-pages 134217728 设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4。 1vm-max-threads 4 设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启。 1glueoutputbuf yes 指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法。 12hash-max-zipmap-entries 64hash-max-zipmap-value 512 指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）。 1activerehashing yes 指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件。 1include /path/to/local.conf redis的持久化RDB（Redis DataBase）在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里。它可以手动执行，也可以再redis.conf中配置，定期执行。Redis会单独创（fork）一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能。如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那RDB方式要比AOF方式更加的高效。fork的作用是复制一个与当前进程一样的进程。新进程的所有数据（变量、环境变量、程序计数器等）数值都和原进程一致，但是是一个全新的进程，并作为原进程的子进程。rdb保存的默认是dump.rdb文件，它是经过压缩的二进制文件。 RDB的缺点是最后一次持久化后的数据可能丢失。 自动保存间隔BGSAVE可以在不阻塞主进程的情况下完成数据的备份。可以通过redis.conf中设置多个自动保存条件，只要有一个条件被满足，服务器就会执行BGSAVE命令。 123456789# 以下配置表示的条件：# 服务器在900秒之内被修改了1次save 900 1# 服务器在300秒之内被修改了10次save 300 10# 服务器在60秒之内被修改了10000次save 60 10000#表示不同步save “” 如何触发（创建）RDB快照冷拷贝后重新使用 可以cp dump.rdb dump_new.rdbRDB文件可以通过两个命令来生成：命令save或者是bgsave Save：save时只管保存，其它不管，全部阻塞。 BGSAVE：Redis会在后台异步进行快照操作，快照同时还可以响应客户端请求。即派生(fork)一个子进程来创建新的RDB文件，记录接收到BGSAVE当时的数据库状态，父进程继续处理接收到的命令，子进程完成文件的创建之后，会发送信号给父进程，而与此同时，父进程处理命令的同时，通过轮询来接收子进程的信号。可以通过lastsave命令获取最后一次成功执行快照的时间，执行flushall命令，也会产生dump.rdb文件，但里面是空的，无意义。 如何恢复而RDB文件的载入一般情况是自动的，redis服务器启动的时候，redis服务器再启动的时候如果检测到RDB文件的存在，那么redis会自动载入这个文件。 如何停止动态所有停止RDB保存规则的方法：redis-cli config set save &quot;&quot; 优劣势 适合大规模的数据恢复 对数据完整性和一致性要求不高 在一定间隔时间做一次备份，所以如果redis意外down掉的话，就会丢失最后一次快照后的所有修改fork的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑 AOF（Append Only File）以日志的形式来记录每个写操作，将Redis执行过的所有写指令记录下来(读操作不记录)，只许追加文件但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话就根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作Aof保存的是appendonly.aof文件。 AOF启动/修复/恢复正常恢复 启动：设置Yes，修改默认的appendonly no，改为yes 将有数据的aof文件复制一份保存到对应目录(config get dir) 恢复：重启redis然后重新加载异常恢复 启动：设置Yes，修改默认的appendonly no，改为yes 备份被写坏的AOF文件 修复：redis-check-aof --fix进行修复 恢复：重启redis然后重新加载 rewriteAOF采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制,当AOF文件的大小超过所设定的阈值时，Redis就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集，可以使用命令bgrewriteaof。重写原理AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句。重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似。 触发机制Redis会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次rewrite后大小的一倍且文件大于64M时触发优势 每修改同步：appendfsync always 同步持久化 每次发生数据变更会被立即记录到磁盘，性能较差但数据完整性比较好 每秒同步：appendfsync everysec异步操作，每秒记录 如果一秒内宕机，有数据丢失 不同步：appendfsync no 从不同步劣势 相同数据集的数据而言aof文件要远大于rdb文件，恢复速度慢于rdb。 aof运行效率要慢于rdb,每秒同步策略效率较好，不同步效率和rdb相同。 官网建议RDB持久化方式能够在指定的时间间隔能对你的数据进行快照存储AOF持久化方式记录每次对服务器写的操作,当服务器重启的时候会重新执行这些命令来恢复原始的数据,AOF命令以redis协议追加保存每次写的操作到文件末尾.Redis还能对AOF文件进行后台重写,使得AOF文件的体积不至于过大只做缓存：如果你只希望你的数据在服务器运行的时候存在,你也可以不使用任何持久化方式.同时开启两种持久化方式在这种情况下,当redis重启的时候会优先载入AOF文件来恢复原始的数据,因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整.RDB的数据不实时，同时使用两者时服务器重启也只会找AOF文件。那要不要只使用AOF呢？作者建议不要，因为RDB更适合用于备份数据库(AOF在不断变化不好备份)，快速重启，而且不会有AOF可能潜在的bug，留着作为一个万一的手段。 性能建议因为RDB文件只用作后备用途，建议只在Slave上持久化RDB文件，而且只要15分钟备份一次就够了，只保留save 900 1这条规则。如果Enalbe AOF，好处是在最恶劣情况下也只会丢失不超过两秒数据，启动脚本较简单只load自己的AOF文件就可以了。代价一是带来了持续的IO，二是AOF rewrite的最后将rewrite过程中产生的新数据写到新文件造成的阻塞几乎是不可避免的。只要硬盘许可，应该尽量减少AOF rewrite的频率，AOF重写的基础大小默认值64M太小了，可以设到5G以上。默认超过原大小100%大小时重写可以改到适当的数值。如果不Enable AOF ，仅靠Master-Slave Replication 实现高可用性也可以。能省掉一大笔IO也减少了rewrite时带来的系统波动。代价是如果Master/Slave同时倒掉，会丢失十几分钟的数据，启动脚本也要比较两个Master/Slave中的RDB文件，载入较新的那个。新浪微博就选用了这种架构。 Redis的事务可以一次执行多个命令，本质是一组命令的集合。一个事务中的所有命令都会序列化，按顺序地串行化执行而不会被其它命令插入，不许加塞，一个队列中，一次性、顺序性、排他性的执行一系列命令。 常见案例(1)正常执行(2)放弃事务–&gt;中途放弃事物(3)全体连坐–&gt;如果中间有“错误”则全部放弃执行(4)冤头债主–&gt;执行过程中遇到某个不可执行的操作，则其他可以执行的放行。(5)watch监控 悲观锁/乐观锁/CAS(Check And Set)悲观锁：提交版本必须大于记录当前版本才能执行更新，传统的关系型数据库里边就用到了很多这种锁机制，比如行锁，表锁等，读锁，写锁等，都是在做操作之前先上锁。乐观锁：每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，可以使用版本号等机制。乐观锁适用于多读的应用类型，这样可以提高吞吐量。案例: 初始化信用卡可用余额和欠额，无加塞篡改，先监控再开启multi，保证两笔金额变动在同一个事务内，有加塞篡改，监控了key，如果key被修改了，后面一个事务的执行失效，unwatch一旦执行了exec之前加的监控锁都会被取消掉了。CSA 小结Watch指令，类似乐观锁，事务提交时，如果Key的值已被别的客户端改变，比如某个list已被别的客户端push/pop过了，整个事务队列都不会被执行通过WATCH命令在事务执行之前监控了多个Keys，倘若在WATCH之后有任何Key的值发生了变化，EXEC命令执行的事务都将被放弃，同时返回Nullmulti-bulk应答以通知调用者事务执行失败。 3阶段 开启：以MULTI开始一个事务 入队：将多个命令入队到事务中，接到这些命令并不会立即执行，而是放到等待执行的事务队列里面 执行：由EXEC命令触发事务 3特性 单独的隔离操作：事务中的所有命令都会序列化、按顺序地执行。事务在执行的过程中，不会被其他客户端发送来的命令请求所打断。 没有隔离级别的概念：队列中的命令没有提交之前都不会实际的被执行，因为事务提交前任何指令都不会被实际执行，也就不存在”事务内的查询要看到事务里的更新，在事务外查询不能看到”这个让人万分头痛的问题。 不保证原子性：redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚。 Redis的发布订阅进程间的一种消息通信模式：发送者(pub)发送消息，订阅者(sub)接收消息。先订阅后发布后才能收到消息12345678#可以一次性订阅多个SUBSCRIBE c1 c2 c3#消息发布PUBLISH c2 hello-redis#订阅多个，通配符*PSUBSCRIBE new *#收取消息PUBLISH new1 redis2015 Redis的复制(Master/Slave)也就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的master/slaver机制，Master以写为主，Slave以读为主,可实现读写分离，容灾恢复。 实现主从复制需修改配置文件细节操作：拷贝多个redis.conf文件，开启daemonize yes,pid文件名字,指定端口,log文件名字,dump.rdb名字原则：配从(库)不配主(库)从库配置1slaveof 主库IP 主库端口 每次与master断开之后，都需要重新连接，除非你配置进`redis.conf`文件，可以使用`info replication`可以查看当前redis的主从信息。 复制原理PSYNC命令来执行复制时的同步操作，包括完整重同步和部分重同步两种模式：完整重同步：通过让主服务器创建并发送RDB文件，以及向从服务器发送保存在缓存区里面的写命令在进行同步。部分重同步：用于处理断线后重复制的情况。当从服务器在断线后重新连接主服务器时，如果条件允许，主服务器可以将主从服务器连接断开期间执行的写命令发送给从服务器，从服务器只要接收并执行这些写命令，就可以将数据库更新至主服务器当前所处的状态。部分重同步涉及到以下三点：123复制偏移量复制积压缓冲区服务器运行ID 复制偏移量执行复制的主从双方会分别维护一个复制偏移量，主服务器每次向从服务器发送N个字节数据时，就将自己的复制偏移量的值加上N，从服务器每接收到主服务器发送过来的N个字节数据时，也会将自己的偏移量加上N。这样，如果主从服务器处于一致的状态时，那么主从服务器的复制偏移量总是相同的。 复制积压缓冲区如果由于断线后，主从服务器重新进行连接时，发现复制偏移量不一致了，这时就需要用到复制积压缓冲区了。复制积压缓冲区是由主服务器维护的一个固定长度、先进先出的队列，默认大小是1MB。当主服务器进行命令传播时，它不仅会将写命令发送给所有从服务器，还会将写命令写入复制积压缓冲区里面。这样主服务器的复制积压缓冲区就会保存着最近传播的写命令，并且记录着相应的复制偏移量。当从服务器重新连接上主服务器时，如果发现复制偏移量不一致，就会在复制积压缓冲区中寻找对应偏移量之后的数据。如果该偏移量也不存在复制积压缓冲区中，那么只能进行完整重同步操作了。由以上描述可知，复制积压缓冲区的大小在网络不稳定的环境中，会大大影响集群的性能。所以合理设置复制积压缓冲区是调优的一种手段，对应的具体参数是：repl-backlog-size 服务器运行ID每一个Redis服务器，无论主从，都有一个由40个随机的十六进制的字符组成的运行ID。该ID在复制的时候，用于识别主服务器是否已经更改：如果主服务器的ID跟之前复制的不一致，则说明主服务器已经发生变更。这时需要进行完整重同步。但是只要是重新连接master,一次完全同步（全量复制)将被自动执行。 哨兵模式(sentinel)其实就是能够后台监控主机是否故障，如果故障了根据投票数自动将从库转换为主库例如：79带着80、81自定义的/myredis目录下新建sentinel.conf文件配置哨兵,填写内容 1sentinel monitor 被监控数据库名字(自己起名字) 127.0.0.1 6379 1 上面最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主机，得票数多少后成为主机启动哨兵1redis-sentinel /myredis/sentinel.conf 一组sentinel能同时监控多个Master 复制的缺点复制延时：由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave机器数量的增加也会使这个问题更加严重。 Redis的Java客户端JedisJedis所需要的jar包12commons-pool-1.6.jarjedis-2.1.0.jar Jedis常用操作 测试连通性 一个key 五大数据类型 事务提交 123456789101112131415161718192021222324252627282930package com.atguigu.redis.test;import redis.clients.jedis.Jedis;import redis.clients.jedis.Response;import redis.clients.jedis.Transaction;public class Test03 &#123; public static void main(String[] args) &#123; Jedis jedis = new Jedis("127.0.0.1",6379); //监控key，如果该动了事务就被放弃 jedis.watch("serialNum"); jedis.set("serialNum","s#####################"); jedis.unwatch();*/ //被当作一个命令进行执行 Transaction transaction = jedis.multi(); Response&lt;String&gt; response = transaction.get("serialNum"); transaction.set("serialNum","s002"); response = transaction.get("serialNum"); transaction.lpush("list3","a"); transaction.lpush("list3","b"); transaction.lpush("list3","c"); transaction.exec(); //2 transaction.discard(); System.out.println("serialNum***********"+response.get()); &#125;&#125; 加锁 1234567891011121314151617181920212223242526272829303132333435363738public class TestTransaction &#123; public boolean transMethod() &#123; Jedis jedis = new Jedis("127.0.0.1", 6379); int balance;// 可用余额 int debt;// 欠额 int amtToSubtract = 10;// 实刷额度 jedis.watch("balance"); //jedis.set("balance","5");//此句不该出现，讲课方便。模拟其他程序已经修改了该条目 balance = Integer.parseInt(jedis.get("balance")); if (balance &lt; amtToSubtract) &#123; jedis.unwatch(); System.out.println("modify"); return false; &#125; else &#123; System.out.println("***********transaction"); Transaction transaction = jedis.multi(); transaction.decrBy("balance", amtToSubtract); transaction.incrBy("debt", amtToSubtract); transaction.exec(); balance = Integer.parseInt(jedis.get("balance")); debt = Integer.parseInt(jedis.get("debt")); System.out.println("*******" + balance); System.out.println("*******" + debt); return true; &#125; &#125; /** * 通俗点讲，watch命令就是标记一个键，如果标记了一个键， 在提交事务前如果该键被别人修改过，那事务就会失败，这种情况通常可以在程序中 * 重新再尝试一次。 * 首先标记了键balance，然后检查余额是否足够，不足就取消标记，并不做扣减； 足够的话，就启动事务进行更新操作， * 如果在此期间键balance被其它人修改， 那在提交事务（执行exec）时就会报错， 程序中通常可以捕获这类错误再重新执行一次，直到成功。 */ public static void main(String[] args) &#123; TestTransaction test = new TestTransaction(); boolean retValue = test.transMethod(); System.out.println("main retValue-------: " + retValue); &#125;&#125; 主从复制6379,6380启动，先各自先独立，主写，从读 123456789public static void main(String[] args) throws InterruptedException &#123; Jedis jedis_M = new Jedis("127.0.0.1",6379); Jedis jedis_S = new Jedis("127.0.0.1",6380); jedis_S.slaveof("127.0.0.1",6379); jedis_M.set("k6","v6"); Thread.sleep(500); System.out.println(jedis_S.get("k6"));&#125; JedisPool线程池获取Jedis实例需要从JedisPool中获取，用完Jedis实例需要返还给JedisPool，如果Jedis在使用过程中出错，则也需要还给JedisPool，案例见代码: JedisPoolUtil 123456789101112131415161718192021222324252627282930313233343536373839package com.atguigu.redis.test;import redis.clients.jedis.Jedis;import redis.clients.jedis.JedisPool;import redis.clients.jedis.JedisPoolConfig;public class JedisPoolUtil &#123;//被volatile修饰的变量不会被本地线程缓存，对该变量的读写都是直接操作共享内存。private static volatile JedisPool jedisPool = null; private JedisPoolUtil() &#123;&#125; public static JedisPool getJedisPoolInstance()&#123; if(null == jedisPool)&#123; synchronized (JedisPoolUtil.class)&#123; if(null == jedisPool)&#123; JedisPoolConfig poolConfig = new JedisPoolConfig(); poolConfig.setMaxActive(1000); poolConfig.setMaxIdle(32); poolConfig.setMaxWait(100*1000); poolConfig.setTestOnBorrow(true); jedisPool = new JedisPool(poolConfig,"127.0.0.1"); &#125; &#125; &#125; return jedisPool; &#125; public static void release(JedisPool jedisPool,Jedis jedis)&#123; if(null != jedis)&#123; jedisPool.returnResourceObject(jedis); &#125; &#125;&#125; 获取一个连接jedisPool.getResource(); 1234567891011121314151617181920package com.atguigu.redis.test; import redis.clients.jedis.Jedis;import redis.clients.jedis.JedisPool;public class Test01 &#123; public static void main(String[] args) &#123; JedisPool jedisPool = JedisPoolUtil.getJedisPoolInstance(); Jedis jedis = null; try &#123; jedis = jedisPool.getResource(); jedis.set("k18","v183"); &#125; catch (Exception e) &#123; e.printStackTrace(); &#125;finally&#123; JedisPoolUtil.release(jedisPool, jedis); &#125; &#125;&#125; JedisPoolConfig配置总结JedisPool的配置参数大部分是由JedisPoolConfig的对应项来赋值的。 1234567891011121314151617181920212223242526272829303132333435#控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted。maxActive#控制一个pool最多有多少个状态为idle(空闲)的jedis实例maxIdle：#表示当pool中的jedis实例都被allocated完时，pool要采取的操作；默认有三种。whenExhaustedAction：#表示无jedis实例时，直接抛出NoSuchElementException；WHEN_EXHAUSTED_FAIL#则表示阻塞住，或者达到maxWait时抛出JedisConnectionException；WHEN_EXHAUSTED_BLOCK#则表示新建一个jedis实例，也就说设置的maxActive无用； WHEN_EXHAUSTED_GROW#表示当borrow一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛JedisConnectionException；maxWait#获得一个jedis实例的时候是否检查连接可用性（ping()）；如果为true，则得到的jedis实例均是可用的；testOnBorrow#return 一个jedis实例给pool时，是否检查连接可用性（ping()）；testOnReturn#如果为true，表示有一个idle object evitor线程对idle object进行扫描，如果validate失败，此object会被从pool中drop掉；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；testWhileIdle#表示idle object evitor两次扫描之间要sleep的毫秒数；timeBetweenEvictionRunsMillis#表示idle object evitor每次扫描的最多的对象数；numTestsPerEvictionRun#表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；minEvictableIdleTimeMillis#在minEvictableIdleTimeMillis基础上，加入了至少minIdle个对象已经在pool里面了。如果为-1，evicted不会根据idle time驱逐任何对象。如果minEvictableIdleTimeMillis&gt;0，则此项设置无意义，且只有在timeBetweenEvictionRunsMillis大于0时才有意义；softMinEvictableIdleTimeMillis#borrowObject返回对象时，是采用DEFAULT_LIFO（last in first out，即类似cache的最频繁使用队列），如果为False，则表示FIFO队列；lifo#其中JedisPoolConfig对一些参数的默认设置如下：testWhileIdle=trueminEvictableIdleTimeMills=60000timeBetweenEvictionRunsMillis=30000numTestsPerEvictionRun=-1]]></content>
-      <categories>
-        <category>数据库</category>
-        <category>Redis</category>
-      </categories>
-      <tags>
-        <tag>Redis</tag>
-        <tag>分布式缓存</tag>
-      </tags>
-  </entry>
+<search> 
+  
+    
+    <entry>
+      <title><![CDATA[WEB常见性能优化策略]]></title>
+      <url>/2017/09/15/WEB%E5%B8%B8%E8%A7%81%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%AD%96%E7%95%A5/</url>
+      <content type="html"><![CDATA[<blockquote class="blockquote-center"></blockquote>
+
+<a id="more"></a>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><p>之所以把代码放到第一位，是因为这一点最容易引起技术人员的忽视。很多技术人员拿到一个性能优化的需求以后，言必称缓存、异步、JVM等。实际上，第一步就应该是分析相关的代码，找出相应的瓶颈，再来考虑具体的优化策略。有一些性能问题，完全是由于代码写的不合理，通过直接修改一下代码就能解决问题的，比如for循环次数过多、作了很多无谓的条件判断、相同逻辑重复多次等。</p>
+<h3 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h3><p>数据库的调优，总的来说分为以下三部分：</p>
+<h4 id="SQL调优"><a href="#SQL调优" class="headerlink" title="SQL调优"></a>SQL调优</h4><p>这是最常用、每一个技术人员都应该掌握基本的SQL调优手段（包括方法、工具、辅助系统等）。这里以MySQL为例，最常见的方式是，由自带的慢查询日志或者开源的慢查询系统定位到具体的出问题的SQL，然后使用explain、profile等工具来逐步调优，最后经过测试达到效果后上线。这方面的细节，可以参考MySQL索引原理及慢查询优化。</p>
+<h4 id="架构层面的调优"><a href="#架构层面的调优" class="headerlink" title="架构层面的调优"></a>架构层面的调优</h4><p>这一类调优包括读写分离、多从库负载均衡、水平和垂直分库分表等方面，一般需要的改动较大，但是频率没有SQL调优高，而且一般需要DBA来配合参与。那么什么时候需要做这些事情？我们可以通过内部监控报警系统（比如Zabbix），定期跟踪一些指标数据是否达到瓶颈，一旦达到瓶颈或者警戒值，就需要考虑这些事情。通常，DBA也会定期监控这些指标值。</p>
+<h4 id="连接池调优"><a href="#连接池调优" class="headerlink" title="连接池调优"></a>连接池调优</h4><p>我们的应用为了实现数据库连接的高效获取、对数据库连接的限流等目的，通常会采用连接池类的方案，即每一个应用节点都管理了一个到各个数据库的连接池。随着业务访问量或者数据量的增长，原有的连接池参数可能不能很好地满足需求，这个时候就需要结合当前使用连接池的原理、具体的连接池监控数据和当前的业务量作一个综合的判断，通过反复的几次调试得到最终的调优参数。</p>
+<h3 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h3><h4 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h4><p>本地缓存（HashMap/ConcurrentHashMap、Ehcache、Guava Cache等），缓存服务（Redis/Tair/Memcache等）。</p>
+<h4 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h4><p>什么情况适合用缓存？考虑以下两种场景：</p>
+<p>短时间内相同数据重复查询多次且数据更新不频繁，这个时候可以选择先从缓存查询，查询不到再从数据库加载并回设到缓存的方式。此种场景较适合用单机缓存。<br>高并发查询热点数据，后端数据库不堪重负，可以用缓存来扛。</p>
+<h4 id="选型考虑"><a href="#选型考虑" class="headerlink" title="选型考虑"></a>选型考虑</h4><ul>
+<li>如果数据量小，并且不会频繁地增长又清空（这会导致频繁地垃圾回收），那么可以选择本地缓存。具体的话，如果需要一些策略的支持（比如缓存满的逐出策略），可以考虑Ehcache；如不需要，可以考虑HashMap；如需要考虑多线程并发的场景，可以考虑ConcurentHashMap。</li>
+<li>其他情况，可以考虑缓存服务。目前从资源的投入度、可运维性、是否能动态扩容以及配套设施来考虑，我们优先考虑Tair。除非目前Tair还不能支持的场合（比如分布式锁、Hash类型的value），我们考虑Redis。</li>
+</ul>
+<h4 id="设计关键点"><a href="#设计关键点" class="headerlink" title="设计关键点"></a>设计关键点</h4><h5 id="什么时候更新缓存？如何保障更新的可靠性和实时性？"><a href="#什么时候更新缓存？如何保障更新的可靠性和实时性？" class="headerlink" title="什么时候更新缓存？如何保障更新的可靠性和实时性？"></a>什么时候更新缓存？如何保障更新的可靠性和实时性？</h5><p>更新缓存的策略，需要具体问题具体分析。这里以门店POI的缓存数据为例，来说明一下缓存服务型的缓存更新策略是怎样的？目前约10万个POI数据采用了Tair作为缓存服务，具体更新的策略有两个：</p>
+<ol>
+<li>接收门店变更的消息，准实时更新。</li>
+<li>给每一个POI缓存数据设置5分钟的过期时间，过期后从DB加载再回设到DB。这个策略是对第一个策略的有力补充，解决了手动变更DB不发消息、接消息更新程序临时出错等问题导致的第一个策略失效的问题。通过这种双保险机制，有效地保证了POI缓存数据的可靠性和实时性。  </li>
+</ol>
+<h5 id="缓存是否会满，缓存满了怎么办？"><a href="#缓存是否会满，缓存满了怎么办？" class="headerlink" title="缓存是否会满，缓存满了怎么办？"></a>缓存是否会满，缓存满了怎么办？</h5><p>对于一个缓存服务，理论上来说，随着缓存数据的日益增多，在容量有限的情况下，缓存肯定有一天会满的。如何应对？</p>
+<ol>
+<li>给缓存服务，选择合适的缓存逐出算法，比如最常见的LRU。</li>
+<li>针对当前设置的容量，设置适当的警戒值，比如10G的缓存，当缓存数据达到8G的时候，就开始发出报警，提前排查问题或者扩容。</li>
+<li>给一些没有必要长期保存的key，尽量设置过期时间。  </li>
+</ol>
+<h5 id="缓存是否允许丢失？丢失了怎么办？"><a href="#缓存是否允许丢失？丢失了怎么办？" class="headerlink" title="缓存是否允许丢失？丢失了怎么办？"></a>缓存是否允许丢失？丢失了怎么办？</h5><p>根据业务场景判断，是否允许丢失。如果不允许，就需要带持久化功能的缓存服务来支持，比如Redis或者Tair。更细节的话，可以根据业务对丢失时间的容忍度，还可以选择更具体的持久化策略，比如Redis的RDB或者AOF。  </p>
+<h5 id="缓存被“击穿”问题"><a href="#缓存被“击穿”问题" class="headerlink" title="缓存被“击穿”问题"></a>缓存被“击穿”问题</h5><p>对于一些设置了过期时间的key，如果这些key可能会在某些时间点被超高并发地访问，是一种非常“热点”的数据。这个时候，需要考虑另外一个问题：缓存被“击穿”的问题。</p>
+<p><strong>概念</strong>：缓存在某个时间点过期的时候，恰好在这个时间点对这个Key有大量的并发请求过来，这些请求发现缓存过期一般都会从后端DB加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端DB压垮。</p>
+<p><strong>如何解决</strong>：业界比较常用的做法，是使用mutex。简单地来说，就是在缓存失效的时候（判断拿出来的值为空），不是立即去load db，而是先使用缓存工具的某些带成功操作返回值的操作（比如Redis的SETNX或者Memcache的ADD）去set一个mutex key，当操作返回成功时，再进行load db的操作并回设缓存；否则，就重试整个get缓存的方法。类似下面的代码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(key)</span> </span>&#123;</div><div class="line">    String value = redis.get(key);</div><div class="line">    <span class="keyword">if</span> (value == <span class="keyword">null</span>) &#123; <span class="comment">//代表缓存值过期</span></div><div class="line">        <span class="comment">//设置3min的超时，防止del操作失败的时候，下次缓存过期一直不能load db</span></div><div class="line">        <span class="keyword">if</span> (redis.setnx(key_mutex, <span class="number">1</span>, <span class="number">3</span> * <span class="number">60</span>) == <span class="number">1</span>) &#123;  <span class="comment">//代表设置成功</span></div><div class="line">            value = db.get(key);</div><div class="line">            redis.set(key, value, expire_secs);</div><div class="line">            redis.del(key_mutex);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;  <span class="comment">//这个时候代表同时候的其他线程已经load db并回设到缓存了，这时候重试获取缓存值即可</span></div><div class="line">            sleep(<span class="number">50</span>);</div><div class="line">            get(key);  <span class="comment">//重试</span></div><div class="line">        &#125;</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h3 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h3><h4 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h4><p>针对某些客户端的请求，在服务端可能需要针对这些请求做一些附属的事情，这些事情其实用户并不关心或者用户不需要立即拿到这些事情的处理结果，这种情况就比较适合用异步的方式处理这些事情。</p>
+<h4 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h4><ul>
+<li>缩短接口响应时间，使用户的请求快速返回，用户体验更好。</li>
+<li>避免线程长时间处于运行状态，这样会引起服务线程池的可用线程长时间不够用，进而引起线程池任务队列长度增大，从而阻塞更多请求任务，使得更多请求得不到技术处理。</li>
+<li>线程长时间处于运行状态，可能还会引起系统Load、CPU使用率、机器整体性能下降等一系列问题，甚至引发雪崩。异步的思路可以在不增加机器数和CPU数的情况下，有效解决这个问题。</li>
+</ul>
+<h4 id="常见做法"><a href="#常见做法" class="headerlink" title="常见做法"></a>常见做法</h4><p><strong>一种做法</strong>，是额外开辟线程，这里可以采用额外开辟一个线程或者使用线程池的做法，在IO线程（处理请求响应）之外的线程来处理相应的任务，在IO线程中让response先返回。</p>
+<p>如果异步线程处理的任务设计的数据量非常巨大，那么可以引入阻塞队列BlockingQueue作进一步的优化。具体做法是让一批异步线程不断地往阻塞队列里扔数据，然后额外起一个处理线程，循环批量从队列里拿预设大小的一批数据，来进行批处理（比如发一个批量的远程服务请求），这样进一步提高了性能。</p>
+<p><strong>另一种做法</strong>，是使用消息队列（MQ）中间件服务，MQ天生就是异步的。一些额外的任务，可能不需要我这个系统来处理，但是需要其他系统来处理。这个时候可以先把它封装成一个消息，扔到消息队列里面，通过消息中间件的可靠性保证把消息投递到关心它的系统，然后让这个系统来做相应的处理。</p>
+<p>比如C端在完成一个提单动作以后，可能需要其它端做一系列的事情，但是这些事情的结果不会立刻对C端用户产生影响，那么就可以先把C端下单的请求响应先返回给用户，返回之前往MQ中发一个消息即可。而且这些事情理应不是C端的负责范围，所以这个时候用MQ的方式，来解决这个问题最合适。</p>
+<h3 id="NoSQL"><a href="#NoSQL" class="headerlink" title="NoSQL"></a>NoSQL</h3><h4 id="和缓存的区别"><a href="#和缓存的区别" class="headerlink" title="和缓存的区别"></a>和缓存的区别</h4><p>先说明一下，这里介绍的和缓存那一节不一样，虽然可能会使用一样的数据存储方案（比如Redis或者Tair），但是使用的方式不一样，这一节介绍的是把它作为DB来用。如果当作DB来用，需要有效保证数据存储方案的可用性、可靠性。</p>
+<h4 id="使用场景-2"><a href="#使用场景-2" class="headerlink" title="使用场景"></a>使用场景</h4><p>需要结合具体的业务场景，看这块业务涉及的数据是否适合用NoSQL来存储，对数据的操作方式是否适合用NoSQL的方式来操作，或者是否需要用到NoSQL的一些额外特性（比如原子加减等）。</p>
+<p>如果业务数据不需要和其他数据作关联，不需要事务或者外键之类的支持，而且有可能写入会异常频繁，这个时候就比较适合用NoSQL（比如HBase）。</p>
+<p>比如，美团点评内部有一个对exception做的监控系统，如果在应用系统发生严重故障的时候，可能会短时间产生大量exception数据，这个时候如果选用MySQL，会造成MySQL的瞬间写压力飙升，容易导致MySQL服务器的性能急剧恶化以及主从同步延迟之类的问题，这种场景就比较适合用Hbase类似的NoSQL来存储。</p>
+<h3 id="JVM调优"><a href="#JVM调优" class="headerlink" title="JVM调优"></a>JVM调优</h3><h4 id="什么时候调？"><a href="#什么时候调？" class="headerlink" title="什么时候调？"></a>什么时候调？</h4><p>通过监控系统（如没有现成的系统，自己做一个简单的上报监控的系统也很容易）上对一些机器关键指标（gc time、gc count、各个分代的内存大小变化、机器的Load值与CPU使用率、JVM的线程数等）的监控报警，也可以看gc log和jstat等命令的输出，再结合线上JVM进程服务的一些关键接口的性能数据和请求体验，基本上就能定位出当前的JVM是否有问题，以及是否需要调优。</p>
+<h4 id="怎么调？"><a href="#怎么调？" class="headerlink" title="怎么调？"></a>怎么调？</h4><ol>
+<li>如果发现高峰期CPU使用率与Load值偏大，这个时候可以观察一些JVM的thread count以及gc count（可能主要是young gc count），如果这两个值都比以往偏大（也可以和一个历史经验值作对比），基本上可以定位是young gc频率过高导致，这个时候可以通过适当增大young区大小或者占比的方式来解决。</li>
+<li>如果发现关键接口响应时间很慢，可以结合gc time以及gc log中的stop the world的时间，看一下整个应用的stop the world的时间是不是比较多。如果是，可能需要减少总的gc time，具体可以从减小gc的次数和减小单次gc的时间这两个维度来考虑，一般来说，这两个因素是一对互斥因素，我们需要根据实际的监控数据来调整相应的参数（比如新生代与老生代比值、eden与survivor比值、MTT值、触发cms回收的old区比率阈值等）来达到一个最优值。</li>
+<li>如果发生full gc或者old cms gc非常频繁，通常这种情况会诱发STW的时间相应加长，从而也会导致接口响应时间变慢。这种情况，大概率是出现了“内存泄露”，Java里的内存泄露指的是一些应该释放的对象没有被释放掉（还有引用拉着它）。那么这些对象是如何产生的呢？为啥不会释放呢？对应的代码是不是出问题了？问题的关键是搞明白这个，找到相应的代码，然后对症下药。所以问题的关键是转化成寻找这些对象。怎么找？综合使用jmap和MAT，基本就能定位到具体的代码。</li>
+</ol>
+<h3 id="多线程与分布式"><a href="#多线程与分布式" class="headerlink" title="多线程与分布式"></a>多线程与分布式</h3><h4 id="使用场景-3"><a href="#使用场景-3" class="headerlink" title="使用场景"></a>使用场景</h4><p>离线任务、异步任务、大数据任务、耗时较长任务的运行**，适当地利用，可达到加速的效果。</p>
+<p>注意：线上对响应时间要求较高的场合，尽量少用多线程，尤其是服务线程需要等待任务线程的场合（很多重大事故就是和这个息息相关），如果一定要用，可以对服务线程设置一个最大等待时间。</p>
+<h4 id="常见做法-1"><a href="#常见做法-1" class="headerlink" title="常见做法"></a>常见做法</h4><p>如果单机的处理能力可以满足实际业务的需求，那么尽可能地使用单机多线程的处理方式，减少复杂性；反之，则需要使用多机多线程的方式。</p>
+<p>对于单机多线程，可以引入线程池的机制，作用有二：</p>
+<ul>
+<li><strong>提高性能</strong>，节省线程创建和销毁的开销</li>
+<li><strong>限流</strong>，给线程池一个固定的容量，达到这个容量值后再有任务进来，就进入队列进行排队，保障机器极限压力下的稳定处理能力在使用JDK自带的线程池时，一定要仔细理解构造方法的各个参数的含义，如core pool size、max pool size、keepAliveTime、worker queue等，在理解的基础上通过不断地测试调整这些参数值达到最优效果。</li>
+</ul>
+<p>如果单机的处理能力不能满足需求，这个时候需要使用多机多线程的方式。这个时候就需要一些分布式系统的知识了。首先就必须引入一个单独的节点，作为调度器，其他的机器节点都作为执行器节点。调度器来负责拆分任务，和分发任务到合适的执行器节点；执行器节点按照多线程的方式（也可能是单线程）来执行任务。这个时候，我们整个任务系统就由单击演变成一个集群的系统，而且不同的机器节点有不同的角色，各司其职，各个节点之间还有交互。这个时候除了有多线程、线程池等机制，像RPC、心跳等网络通信调用的机制也不可少。后续我会出一个简单的分布式调度运行的框架。</p>
+<p><strong>转载：</strong><br><a href="https://tech.meituan.com/performance_tunning.html" target="_blank" rel="external">https://tech.meituan.com/performance_tunning.html</a></p>
+]]></content>
+      
+        <categories>
+            
+            <category> Web开发 </category>
+            
+            <category> 优化 </category>
+            
+        </categories>
+        
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[缓存岁月]]></title>
+      <url>/2017/09/14/%E7%BC%93%E5%AD%98%E5%B2%81%E6%9C%88/</url>
+      <content type="html"><![CDATA[<blockquote class="blockquote-center"></blockquote>
+
+<a id="more"></a>
+<h3 id="缓存特征"><a href="#缓存特征" class="headerlink" title="缓存特征"></a>缓存特征</h3><h4 id="命中率"><a href="#命中率" class="headerlink" title="命中率"></a>命中率</h4><p>命中率=返回正确结果数/请求缓存次数，命中率问题是缓存中的一个非常重要的问题，它是衡量缓存有效性的重要指标。命中率越高，表明缓存的使用率越高。</p>
+<h4 id="最大元素（或最大空间）"><a href="#最大元素（或最大空间）" class="headerlink" title="最大元素（或最大空间）"></a>最大元素（或最大空间）</h4><p>缓存中可以存放的最大元素的数量，一旦缓存中元素数量超过这个值（或者缓存数据所占空间超过其最大支持空间），那么将会触发缓存启动清空策略根据不同的场景合理的设置最大元素值往往可以一定程度上提高缓存的命中率，从而更有效的时候缓存。</p>
+<h4 id="清空策略"><a href="#清空策略" class="headerlink" title="清空策略"></a>清空策略</h4><p>如上描述，缓存的存储空间有限制，当缓存空间被用满时，如何保证在稳定服务的同时有效提升命中率？这就由缓存清空策略来处理，设计适合自身数据特征的清空策略能有效提升命中率。常见的一般策略有：  </p>
+<p>1、<strong>FIFO(first in first out)</strong><br>先进先出策略，最先进入缓存的数据在缓存空间不够的情况下（超出最大元素限制）会被优先被清除掉，以腾出新的空间接受新的数据。策略算法主要比较缓存元素的创建时间。在数据实效性要求场景下可选择该类策略，优先保障最新数据可用。</p>
+<p>2、<strong>LFU(less frequently used)</strong><br>最少使用策略，无论是否过期，根据元素的被使用次数判断，清除使用次数较少的元素释放空间。策略算法主要比较元素的hitCount（命中次数）。在保证高频数据有效性场景下，可选择这类策略。</p>
+<p>3、<strong>LRU(least recently used)</strong><br>最近最少使用策略，无论是否过期，根据元素最后一次被使用的时间戳，清除最远使用时间戳的元素释放空间。策略算法主要比较元素最近一次被get使用时间。在热点数据场景下较适用，优先保证热点数据的有效性。<br>除此之外，还有一些简单策略比如：</p>
+<ul>
+<li>根据过期时间判断，清理过期时间最长的元素；</li>
+<li>根据过期时间判断，清理最近要过期的元素；</li>
+<li>随机清理；</li>
+<li>根据关键字（或元素内容）长短清理等。</li>
+</ul>
+<h3 id="缓存介质"><a href="#缓存介质" class="headerlink" title="缓存介质"></a>缓存介质</h3><p>虽然从硬件介质上来看，无非就是内存和硬盘两种，但从技术上，可以分成内存、硬盘文件、数据库。</p>
+<p><strong>内存</strong>：将缓存存储于内存中是最快的选择，无需额外的I/O开销，但是内存的缺点是没有持久化落地物理磁盘，一旦应用异常break down而重新启动，数据很难或者无法复原。</p>
+<p><strong>硬盘</strong>：一般来说，很多缓存框架会结合使用内存和硬盘，在内存分配空间满了或是在异常的情况下，可以被动或主动的将内存空间数据持久化到硬盘中，达到释放空间或备份数据的目的。</p>
+<p><strong>数据库</strong>：前面有提到，增加缓存的策略的目的之一就是为了减少数据库的I/O压力。现在使用数据库做缓存介质是不是又回到了老问题上了？其实，数据库也有很多种类型，像那些不支持SQL，只是简单的key-value存储结构的特殊数据库（如BerkeleyDB和Redis），响应速度和吞吐量都远远高于我们常用的关系型数据库等。</p>
+]]></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Mysql主从数据库的配置]]></title>
+      <url>/2017/09/02/Tomcat%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E9%85%8D%E7%BD%AE/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">没有实力的发怒，是毫无意义的</blockquote><br>因为实验室的项目需要。我们在自己写项目的时候数据库往往是单个的，是没有容灾备份，没有单点故障的处理，今天我们就说一下我们常用的数据库Mysql的主从备份。<br><a id="more"></a></p>
+]]></content>
+      
+        <categories>
+            
+            <category> 数据库 </category>
+            
+            <category> Mysql </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Mysql </tag>
+            
+            <tag> 主从复制 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[分布式数据库中的一致性hash算法]]></title>
+      <url>/2017/06/14/%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7hash%E7%AE%97%E6%B3%95/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">没有实力的愤怒是毫无意义的</blockquote><br>在分布式环境中，由于数据量庞大，往往需要对数据做分区，分区有两种：一种是range分区，另一种是hash分区。顾名思义，hash分区是采用hash算法，将数据划分到不同的分区中，采用传统的hash算法能有效地将数据划分到不同的分区，但是，传统的hash算法在机器上下线时，由于hash映射的变化，会导致大量的数据发生迁移。一致性hash算法（consistent hash）就是用力解决该问题。<br><a id="more"></a></p>
+<h3 id="基本场景"><a href="#基本场景" class="headerlink" title="基本场景"></a>基本场景</h3><p>比如你有N个cache服务器（后面简称 cache），那么如何将一个对象 object映射到N个cache上呢，你很可能会采用类似下面的通用方法计算 object的hash值，然后均匀的映射到到N个cache；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hash(object)%N</div></pre></td></tr></table></figure></p>
+<p>一切都运行正常，再考虑如下的两种情况；</p>
+<ol>
+<li><p>一个cache服务器m down掉了（在实际应用中必须要考虑这种情况），这样所有映射到cache m 的对象都会失效，怎么办，需要把cache m 从 cache中移除，这时候cache是N-1台，映射公式变成了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hash(object)%(N-1)</div></pre></td></tr></table></figure>
+</li>
+<li><p>由于访问加重，需要添加cache，这时候 cache 是 N+1 台，映射公式变成了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hash(object)%(N+1)</div></pre></td></tr></table></figure>
+<p> 1 和 2 意味着什么？这意味着突然之间几乎所有的cache都失效了。对于服务器而言，这是一场灾难，洪水般的访问都会直接冲向后台服务器；再来考虑第三个问题；</p>
+</li>
+<li>由于硬件能力越来越强，你可能想让后面添加的节点多做点活，显然上 面的hash算法也做不到。<br>有什么方法可以改变这个状况呢，这就是 consistent hashing…</li>
+</ol>
+<h3 id="哈希算法的判定标准"><a href="#哈希算法的判定标准" class="headerlink" title="哈希算法的判定标准"></a>哈希算法的判定标准</h3><ol>
+<li><p><strong>平衡性（Balance）</strong>：平衡性是指哈希的结果能够尽可能分布到所有的缓冲中去，这样可以使得所有的缓冲空间都得到利用。很多哈希算法都能够满足这一条件。</p>
+</li>
+<li><p><strong>单调性（Monotonicity）</strong>：单调性是指如果已经有一些内容通过哈希分派到了相应的缓冲中，又有新的缓冲加入到系统中。哈希的结果应能够保证原有已分配的内容可以被映射到原有的或者新的缓冲中去，而不会被映射到旧的缓冲集合中的其他缓冲区。</p>
+</li>
+<li><p><strong>分散性（Spread）</strong>：在分布式环境中，终端有可能看不到所有的缓冲，而是只能看到其中的一部分。当终端希望通过哈希过程将内容映射到缓冲上时，由于不同终端所见的缓冲范围有可能不同，从而导致哈希的结果不一致，最终的结果是相同的内容被不同的终端映射到不同的缓冲区中。这种情况显然是应该避免的，因为它导致相同内容被存储到不同缓冲中去，降低了系统存储的效率。分散性的定义就是上述情况发生的严重程度。好的哈希算法应能够尽量避免不一致的情况发生，也就是尽量降低分散性。</p>
+</li>
+<li><p><strong>负载（Load）</strong>：负载问题实际上是从另一个角度看待分散性问题。既然不同的终端可能将相同的内容映射到不同的缓冲区中，那么对于一个特定的缓冲区而言，也可能被不同的用户映射为不同 的内容。与分散性一样，这种情况也是应当避免的，因此好的哈希算法应能够尽量降低缓冲的负荷。 </p>
+<p> 在分布式集群中，对机器的添加删除，或者机器故障后自动脱离集群这些操作是分布式集群管理最基本的功能。如果采用常用的<code>hash(object)%N</code>算法，那么在有机器添加或者删除后，很多原有的数据就无法找到了，这样严重的违反了单调性原则。接下来说一下一致性哈希算法。</p>
+</li>
+</ol>
+<h3 id="一致性哈希算法"><a href="#一致性哈希算法" class="headerlink" title="一致性哈希算法"></a>一致性哈希算法</h3><ol>
+<li><p><strong>环形Hash空间</strong><br>按照常用的 hash 算法来将对应的 key 哈希到一个具有 2^32 次方个桶的空间中，即 0 ~ (2^32) - 1 的数字空间中。现在我们可以将这些数字头尾相连，想象成一个闭合的环形。如下图：<br><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354350/hash环_iet72e.png" alt=""></p>
+</li>
+<li><p><strong>把数据通过一定的 hash 算法处理后映射到环上</strong><br>现在我们将 object1、object2、object3、object4 四个对象通过特定的 Hash 函数计算出对应的 key 值，然后散列到 Hash 环上。如下图：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Hash(object1) = key1；</div><div class="line">Hash(object2) = key2；</div><div class="line">Hash(object3) = key3；</div><div class="line">Hash(object4) = key4；</div></pre></td></tr></table></figure>
+<p> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354352/映射hash环_e9zovm.png" alt=""></p>
+</li>
+<li><p><strong>将机器通过 hash 算法映射到环上</strong><br>在采用一致性哈希算法的分布式集群中将新的机器加入，其原理是通过使用与对象存储一样的 Hash 算法将机器也映射到环中（一般情况下对机器的 hash 计算是采用机器的IP或者机器唯一的别名作为输入值），然后以顺时针的方向计算，将所有对象存储到离自己最近的机器中。<br>假设现在有 NODE1，NODE2，NODE3 三台机器，通过 Hash 算法得到对应的 KEY 值，映射到环中，其示意图如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Hash(NODE1) = KEY1;</div><div class="line">Hash(NODE2) = KEY2;</div><div class="line">Hash(NODE3) = KEY3;</div></pre></td></tr></table></figure>
+<p> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354356/添加虚拟结点_qachag.png" alt=""></p>
+<p> 通过上图可以看出对象与机器处于同一哈希空间中，这样按顺时针转动 object1 存储到了 NODE1 中，object3 存储到了 NODE2 中，object2、object4 存储到了 NODE3 中。在这样的部署环境中，hash 环是不会变更的，因此，通过算出对象的 hash 值就能快速的定位到对应的机器中，这样就能找到对象真正的存储位置了。</p>
+</li>
+<li><p><strong>机器的删除与添加</strong><br>普通 hash 求余算法最为不妥的地方就是在有机器的添加或者删除之后会造成大量的对象存储位置失效，这样就大大的不满足单调性了。下面来分析一下一致性哈希算法是如何处理的。</p>
+<ul>
+<li><p><strong>节点（机器）的删除</strong><br>以上面的分布为例，如果 NODE2 出现故障被删除了，那么按照顺时针迁移的方法，object3 将会被迁移到 NODE3 中，这样仅仅是 object3 的映射位置发生了变化，其它的对象没有任何的改动。如下图：<br><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354352/添加_hllbth.png" alt=""></p>
+</li>
+<li><p><strong>节点（机器）的添加</strong><br>如果往集群中添加一个新的节点 NODE4，通过对应的哈希算法得到 KEY4，并映射到环中，如下图：<br><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354354/删除_rj3cz5.png" alt=""></p>
+<p>通过按顺时针迁移的规则，那么 object2 被迁移到了 NODE4 中，其它对象还保持这原有的存储位置。通过对节点的添加和删除的分析，一致性哈希算法在保持了单调性的同时，还是数据的迁移达到了最小，这样的算法对分布式集群来说是非常合适的，避免了大量数据迁移，减小了服务器的的压力。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>平衡性</strong><br>根据上面的图解分析，一致性哈希算法满足了单调性和负载均衡的特性以及一般 hash 算法的分散性，但这还并不能当做其被广泛应用的原由，因为还缺少了平衡性。下面将分析一致性哈希算法是如何满足平衡性的。hash 算法是不保证平衡的，如上面只部署了 NODE1 和NODE3 的情况（NODE2 被删除的图），object1 存储到了 NODE1 中，而 object2、object3、object4 都存储到了 NODE3 中，这样就照成了非常不平衡的状态。在一致性哈希算法中，为了尽可能的满足平衡性，其引入了虚拟节点 ——<strong>“虚拟节点”（ virtual node ）是实际节点（机器）在 hash 空间的复制品（ replication ），一实际个节点（机器）对应了若干个“虚拟节点”，这个对应个数也成为“复制个数”，“虚拟节点”在 hash 空间中以 hash 值排列。</strong></p>
+<p> 以上面只部署了 NODE1 和 NODE3 的情况（NODE2 被删除的图）为例，之前的对象在机器上的分布很不均衡，现在我们以2个副本（复制个数）为例，这样整个 hash 环中就存在了4个虚拟节点，最后对象映射的关系图如下：</p>
+<p> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354353/结点数据映射hash环_o3a4xa.png" alt=""></p>
+<p> 根据上图可知对象的映射关系：object1-&gt;NODE1-1，object2-&gt;NODE1-2，object3-&gt;NODE3-2，object4-&gt;NODE3-1。通过虚拟节点的引入，对象的分布就比较均衡了。那么在实际操作中，真正的对象查询是如何工作的呢？对象从 hash 到虚拟节点到实际节点的转换如下图：<br> <img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505354356/查询hash_jafwml.png" alt=""></p>
+<p> “虚拟节点”的 hash 计算可以采用对应节点的 IP 地址加数字后缀的方式。例如假设 NODE1 的 IP 地址为 192.168.1.100。引入“虚拟节点”前，计算 cache A 的 hash 值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Hash(“192.168.1.100”);</div></pre></td></tr></table></figure>
+<p> 引入“虚拟节点”后，计算“虚拟节”点 NODE1-1 和 NODE1-2 的 hash 值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Hash(“192.168.1.100#1”);     // NODE1-1</div><div class="line">Hash(“192.168.1.100#2”);     // NODE1-2</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p><strong>参考</strong><br><a href="http://blog.csdn.net/cywosp/article/details/23397179" target="_blank" rel="external">http://blog.csdn.net/cywosp/article/details/23397179</a></p>
+]]></content>
+      
+        <categories>
+            
+            <category> 数据库 </category>
+            
+            <category> Redis </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> 一致性哈希算法 </tag>
+            
+            <tag> redis </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[致谢606实验室]]></title>
+      <url>/2017/06/07/%E8%87%B4%E8%B0%A2606%E5%AE%9E%E9%AA%8C%E5%AE%A4/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">国事如今谁倚仗，衣带一江而已。</blockquote><br>待续<br><a id="more"></a></p>
+]]></content>
+      
+        <categories>
+            
+            <category> 随笔 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> EGOV </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[我和Hexo的秘密]]></title>
+      <url>/2017/06/06/%E6%88%91%E5%92%8Chexo%E7%9A%84%E7%A7%98%E5%AF%86/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">劝君莫惜金缕衣，劝君惜取少年时</blockquote><br><strong>2017年5月29，今天我终于有了自己的博客，开始把其他上面的东西往hexo上搬了，知乎啊，微博啊，CSDN，segmentflaut等上面的东西一点一点的搬过来。</strong><br><a id="more"></a></p>
+<h3 id="流量统计"><a href="#流量统计" class="headerlink" title="流量统计"></a>流量统计</h3><p>下面的人数统计和访问统计是用的busuanzi</p>
+<h3 id="阅读次数"><a href="#阅读次数" class="headerlink" title="阅读次数"></a>阅读次数</h3><p>文章的阅读次数用的是百度统计和leanCloud</p>
+<h3 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h3><p>本站所有的图片都是存储在免费的CDN服务中。Cloudinary提供的图片CDN服务，在Cloudinary中上传图片后，会生成对应的url地址，将地址直接拿来引用即可。</p>
+<h3 id="站内搜索"><a href="#站内搜索" class="headerlink" title="站内搜索"></a>站内搜索</h3><p>本站的站内搜索是采用hexo自带的local search</p>
+<h3 id="引用站内文章"><a href="#引用站内文章" class="headerlink" title="引用站内文章"></a>引用站内文章</h3><p>可以通过内置标签post_link实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link 文章文件名（不要后缀） 文章标题（可选） %&#125;</div></pre></td></tr></table></figure>
+<p>例如 引用hello.md</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello %&#125;</div></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;% post_link Hello 你好 %&#125;</div></pre></td></tr></table></figure>
+<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><p>本地部署，在localhost：4000</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo s</div></pre></td></tr></table></figure>
+<p>清除无用的标签，索引，分类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo clean</div></pre></td></tr></table></figure>
+<p>更新部署</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo d -g</div></pre></td></tr></table></figure>
+]]></content>
+      
+        <categories>
+            
+            <category> Hexo相关 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> hexo </tag>
+            
+            <tag> 博客 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SpringMVC的执行流程]]></title>
+      <url>/2017/06/05/SpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">三更灯火五更鸡，正是男儿读书时</blockquote><br><strong>在整个Spring MVC 框架中，DispatcherServlet 处于核心位置，负责协调和组织不同组件以完成请求处理并返回响应的工作。</strong><br><a id="more"></a></p>
+<h3 id="Spring-MVC-工作流程图"><a href="#Spring-MVC-工作流程图" class="headerlink" title="Spring MVC 工作流程图"></a>Spring MVC 工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755889/SpringMVC%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90_ewz7aa.png" alt=""></p>
+<h3 id="SpringMVC-处理请求过程："><a href="#SpringMVC-处理请求过程：" class="headerlink" title="SpringMVC 处理请求过程："></a>SpringMVC 处理请求过程：</h3><ol>
+<li>用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；</li>
+<li>DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回。(DispatcherServlet（中央调度），负责request和response，负责调用处理器映射器查找Handler，负责调用处理器适配器执行Handler，有了前端控制器降低了各个组件之间的耦合性，系统扩展性提高)。</li>
+<li>DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter。（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(…)方法）</li>
+<li>提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：<ul>
+<li>HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息</li>
+<li>数据转换：对请求消息进行数据转换。如String转换成Integer、Double等</li>
+<li>数据根式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等</li>
+<li>数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中</li>
+</ul>
+</li>
+<li>Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；</li>
+<li>根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver，jsp还是pdf)返回给DispatcherServlet ；</li>
+<li>ViewResolver 结合Model和View，来渲染视图</li>
+<li>将渲染结果返回给客户端。</li>
+</ol>
+<h3 id="Spring-MVC工作流程图"><a href="#Spring-MVC工作流程图" class="headerlink" title="Spring MVC工作流程图"></a>Spring MVC工作流程图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755888/Spring_MVC%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E5%9B%BE_lhxuct.png" alt=""></p>
+<h3 id="UML时序图"><a href="#UML时序图" class="headerlink" title="UML时序图"></a>UML时序图</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1496755881/Spring_MVC-UML_sdj0tz.png" alt=""></p>
+<h4 id="组件说明"><a href="#组件说明" class="headerlink" title="组件说明:"></a>组件说明:</h4><p>以下组件通常使用框架提供实现：</p>
+<ul>
+<li>DispatcherServlet：作为前端控制器，整个流程控制的中心，控制其它组件执行，统一调度，降低组件之间的耦合性，提高每个组件的扩展性。</li>
+<li>HandlerMapping：通过扩展处理器映射器实现不同的映射方式，例如：配置文件方式，实现接口方式，注解方式等。</li>
+<li>HandlAdapter：通过扩展处理器适配器，支持更多类型的处理器。</li>
+<li>ViewResolver：通过扩展视图解析器，支持更多类型的视图解析，例如：jsp、freemarker、pdf、excel等。</li>
+</ul>
+]]></content>
+      
+        <categories>
+            
+            <category> Web开发 </category>
+            
+            <category> Spring </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> SpringMVC </tag>
+            
+            <tag> SpringMVC执行流程 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Spark On YARN集群环境搭建]]></title>
+      <url>/2017/06/02/Spark-On-YARN%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</url>
+      <content type="html"><![CDATA[<blockquote class="blockquote-center">尽人事，听天命</blockquote>
+
+<p>最近因为写论文的实验需要用到Spark集群，所以就需要自己动手配置一下，尽管现在有很多的云平台提供了很好的云服务，可以很方面的使用，但是收费还是很高的。自己亲自配置一下，才知道其实并不是很难，废话不多说，下面进入正题。<br><a id="more"></a></p>
+<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>用户尽量使用带有root权限的用户，这里假设每个机器的用户是spark，可以减少不必要的麻烦。如何创建root权限用户，这里就不说了，每个节点上的用户都是一样的，安装的路径也必须是一致的。</p>
+<h1 id="软件准备："><a href="#软件准备：" class="headerlink" title="软件准备："></a>软件准备：</h1><ul>
+<li>Jdk</li>
+<li>Scala</li>
+<li>Hadoop</li>
+<li>Spark</li>
+</ul>
+<p>这里的版本，大家可以选择最新的版本就行。jdk 和 scala 的安装和配置大同小异，</p>
+<h1 id="修改主机名"><a href="#修改主机名" class="headerlink" title="修改主机名"></a>修改主机名</h1><p>我们的目标是用主机名来代替主机IP，假设我们现在的机器有三台，我们选择其中一台作为master节点，其他两台作为worker节点，他们的IP为：</p>
+<blockquote>
+<p>10.1.130.21<br>10.1.130.22<br>10.1.130.23</p>
+</blockquote>
+<p>这里，我们想把21作为主节点，22，23作为工作节点。首先是要把每个机器的主机名（hostname）改一下，方法是 <code>vi /etc/hostname</code></p>
+<p>21节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div></pre></td></tr></table></figure>
+<p>22节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.22  salve1</div></pre></td></tr></table></figure>
+<p>23节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
+<p>配置完主机名之后，需要重启生效。</p>
+<p>然后就是修改每个节点的hosts文件，方法是<code>vi /etc/hosts</code></p>
+<p>每个节点都做同样的修改，添加如下配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">10.1.130.21  master</div><div class="line">10.1.130.22  salve1</div><div class="line">10.1.130.23  slave2</div></pre></td></tr></table></figure>
+<p>配置完成后，需要互ping一下，检查是否成功，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">spark@master$ ping slave1 <span class="comment">#从master ping slave1，其他的类似</span></div></pre></td></tr></table></figure>
+<h1 id="SSH免密登录"><a href="#SSH免密登录" class="headerlink" title="SSH免密登录"></a>SSH免密登录</h1><p>如果机器没有安装ssh服务可以安装一下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install openssh-server</div></pre></td></tr></table></figure>
+<p>免密登录，可以参考之间的方法 <a href="/2017/05/31/SSH免密登录/" title="SSH免密登录">SSH免密登录</a></p>
+<h1 id="Java和Scala的安装"><a href="#Java和Scala的安装" class="headerlink" title="Java和Scala的安装"></a>Java和Scala的安装</h1><p><strong>以下所有的安装都是在master节点上进行的。</strong></p>
+<p>从官网下载最新版<a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank" rel="external">Java</a>和<a href="https://www.scala-lang.org/" target="_blank" rel="external">Scala</a>就可以，它们的安装方式差不多，</p>
+<h2 id="Java的安装"><a href="#Java的安装" class="headerlink" title="Java的安装"></a>Java的安装</h2><p>在你想要的安装的目录下解压,这里我们在自己用户下新建一个文件夹叫做app，注意不要用<code>sudo</code>来建立,直接在每一个节点下<code>mkdir app</code>就行了，将源文件放在app中，然后解压。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> app</div><div class="line">tar -zxvf jdk-7u75-linux-x64.gz</div></pre></td></tr></table></figure>
+<p>修改环境变量<code>vi .bashrc</code>, 添加下列内容,注意这里spark是你的用户名，即在你的户用文件夹下。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> WORK_SPACE=/home/spark/app/</div><div class="line"><span class="built_in">export</span> JAVA_HOME=<span class="variable">$WORK_SPACE</span>/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> JRE_HOME=/home/spark/work/jdk1.7.0_75/jre</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$JAVA_HOME</span>/jre/bin:<span class="variable">$PATH</span></div><div class="line"><span class="built_in">export</span> CLASSPATH=<span class="variable">$CLASSPATH</span>:.:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</div></pre></td></tr></table></figure>
+<p>生效环境变量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
+<p>查看java版本，如果打印出如下版本信息，则说明安装成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ java -version </div><div class="line">java version <span class="string">"1.7.0_75"</span></div><div class="line">Java(TM) SE Runtime Environment (build 1.7.0_75-b13)</div><div class="line">Java HotSpot(TM) 64-Bit Server VM (build 24.75-b04, mixed mode)</div></pre></td></tr></table></figure>
+<h2 id="Scala的安装"><a href="#Scala的安装" class="headerlink" title="Scala的安装"></a>Scala的安装</h2><p>Scala 的安装也是一样的，同样解压在app文件夹下，配置环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=<span class="variable">$WORK_SPACE</span>/scala-2.10.4</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$SCALA_HOME</span>/bin</div></pre></td></tr></table></figure>
+<p>生效环境变量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">source</span> .bashrc</div></pre></td></tr></table></figure>
+<p>查看Scala版本，如果打印出如下版本信息，则说明安装成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ scala -version       </div><div class="line">Scala code runner version 2.10.4 -- Copyright 2002-2013, LAMP/EPFL</div></pre></td></tr></table></figure>
+<p>至此，我们的Java和Scala的安装工作就结束了，我们需要将安装的目录分发到slave1和slave2中，同时slave1和slave2的环境变量也需要像master中一样配置.<br>分发</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/jdk1.7.0_75 spark@slave1:~/app/</div><div class="line">scp -r ~/app/jdk1.7.0_75 spark@slave2:~/app/</div><div class="line">scp -r ~/app/scala-2.10.4 spark@slave1:~/app/</div><div class="line">scp -r ~/app/scala-2.10.4 spark@slave1:~/app/</div></pre></td></tr></table></figure>
+<p>修改slave1和slave2环境的环境变量，可以直接复制。然后在slave1和slave2中分别测试一下有没有安装成功。</p>
+<h1 id="安装配置-Hadoop-YARN"><a href="#安装配置-Hadoop-YARN" class="headerlink" title="安装配置 Hadoop YARN"></a>安装配置 Hadoop YARN</h1><h2 id="下载解压"><a href="#下载解压" class="headerlink" title="下载解压"></a>下载解压</h2><p>从<a href="http://hadoop.apache.org/#Download+Hadoop" target="_blank" rel="external">官网</a>下载hadoop,这里我们以 hadoop2.6.0 版本为例。</p>
+<p>同样我们在~/app中解压</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tar -zxvf hadoop-2.6.0.tar.gz</div></pre></td></tr></table></figure>
+<h2 id="配置Hadoop"><a href="#配置Hadoop" class="headerlink" title="配置Hadoop"></a>配置Hadoop</h2><p>同样我们可以在 <code>.bashrc</code>中配置Hadoop的环境变量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> HADOOP_HOME=/home/spark/app/hadoop-2.6.0</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$HADOOP_HOME</span>/bin</div><div class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$HADOOP_HOME</span>/sbin</div></pre></td></tr></table></figure>
+<p>需要配置的配置文件都在hadoop根目录下的<code>etc/hadoop</code>中，一共需要配置7个文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">hadoop-env.sh</div><div class="line">yarn-env.sh</div><div class="line">slaves</div><div class="line">core-site.xml</div><div class="line">hdfs-site.xml</div><div class="line">maprd-site.xml</div><div class="line">yarn-site.xml</div></pre></td></tr></table></figure>
+<ol>
+<li><p>在<code>hadoop-env.sh</code>中配置JAVA_HOME</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>yarn-env.sh</code>中配置JAVA_HOME</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div></pre></td></tr></table></figure>
+</li>
+<li><p>在slaves中配置slave节点的ip或者host，</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
+</li>
+<li><p>修改core-site.xml</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;fs.defaultFS&lt;/name&gt;</div><div class="line">        &lt;value&gt;hdfs://master:9000/&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">         &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</div><div class="line">         &lt;value&gt;file:/home/spark/workspace/hadoop-2.6.0/tmp&lt;/value&gt;</div><div class="line">         &lt;description&gt;Abase <span class="keyword">for</span> other temporary directories.&lt;/description&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>修改hdfs-site.xml</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.namenode.secondary.http-address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:9001&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;</div><div class="line">        &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/name&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;</div><div class="line">        &lt;value&gt;file:/home/spark/app/hadoop-2.6.0/dfs/data&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;dfs.replication&lt;/name&gt;</div><div class="line">        &lt;value&gt;3&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;dfs.namenode.datanode.registration.ip-hostname-check&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>修改mapred-site.xml</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</div><div class="line">        &lt;value&gt;yarn&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>修改yarn-site.xml</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">&lt;configuration&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;</div><div class="line">        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt;</div><div class="line">        &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.nodemanager.pmem-check-enabled&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.nodemanager.vmem-check-enabled&lt;/name&gt;</div><div class="line">    	&lt;value&gt;<span class="literal">false</span>&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">    	&lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt;</div><div class="line">    	&lt;value&gt;amdnode0&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8032&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8030&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8035&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.admin.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8033&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">    &lt;property&gt;</div><div class="line">        &lt;name&gt;yarn.resourcemanager.webapp.address&lt;/name&gt;</div><div class="line">        &lt;value&gt;master:8088&lt;/value&gt;</div><div class="line">    &lt;/property&gt;</div><div class="line">&lt;/configuration&gt;</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这是我自己的配置，大家可以根据自己的需要修改，将配置好的hadoop-2.6.0文件夹分发给所有slaves吧。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/hadoop-2.6.0 spark@slave1:~/app/</div><div class="line">scp -r ~/app/hadoop-2.6.0 spark@slave2:~/app/</div></pre></td></tr></table></figure>
+<h2 id="启动Hadoop"><a href="#启动Hadoop" class="headerlink" title="启动Hadoop"></a>启动Hadoop</h2><p>在 master 上执行以下操作，就可以启动 hadoop 了,因为我们配置了Hadoop的环境变量所以就可以在任意目录下启动Hadoop了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">start-dfs.sh               <span class="comment">#启动dfs,如果没有配置的话就是sbin/start-dfs.sh                </span></div><div class="line">start-yarn.sh              <span class="comment">#启动yarn,如果没有配置的话就是sbin/start-yarn.sh</span></div></pre></td></tr></table></figure>
+<h2 id="验证-Hadoop-是否安装成功"><a href="#验证-Hadoop-是否安装成功" class="headerlink" title="验证 Hadoop 是否安装成功"></a>验证 Hadoop 是否安装成功</h2><p>可以通过jps命令查看各个节点启动的进程是否正常。在 master 上应该有以下几个进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ jps  <span class="comment">#run on master</span></div><div class="line">3407 SecondaryNameNode</div><div class="line">3218 NameNode</div><div class="line">3552 ResourceManager</div><div class="line">3910 Jps</div></pre></td></tr></table></figure>
+<p>在每个slave上应该有以下几个进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ jps   <span class="comment">#run on slaves</span></div><div class="line">2072 NodeManager</div><div class="line">2213 Jps</div><div class="line">1962 DataNode</div></pre></td></tr></table></figure>
+<p>或者在浏览器中输入 <a href="http://master:8088" target="_blank" rel="external">http://master:8088</a> ，应该有 hadoop 的管理界面出来了，并能看到 slave1 和 slave2 节点。也可以通过 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
+<p>查看节点使用情况。</p>
+<h1 id="Spark安装"><a href="#Spark安装" class="headerlink" title="Spark安装"></a>Spark安装</h1><h2 id="下载解压-1"><a href="#下载解压-1" class="headerlink" title="下载解压"></a>下载解压</h2><p>进入官方下载地址下载最新版<a href="https://spark.apache.org/" target="_blank" rel="external">Spark</a>。我下载的是 spark-1.3.0-bin-hadoop2.4.tgz。</p>
+<p>在~/app目录下解压</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">tar -zxvf spark-1.3.0-bin-hadoop2.4.tgz</div><div class="line">mv spark-1.3.0-bin-hadoop2.4 spark-1.3.0    <span class="comment">#如果觉得原来的文件名太长了，可以修改下</span></div></pre></td></tr></table></figure>
+<h2 id="配置-Spark"><a href="#配置-Spark" class="headerlink" title="配置 Spark"></a>配置 Spark</h2><p>spark的配置文件在spark根目录下的<code>conf</code>中, Spark需要修改的配置文件只有两个：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">spark-env.sh </div><div class="line">slaves</div></pre></td></tr></table></figure>
+<ol>
+<li><p>在conf目录下将<code>spark-env.sh.template</code>复制成<code>spark-env.sh</code></p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> ~/app/spark-1.3.0/conf    <span class="comment">#进入spark配置目录</span></div><div class="line">cp spark-env.sh.template spark-env.sh   <span class="comment">#从配置模板复制</span></div><div class="line">vi spark-env.sh     <span class="comment">#添加配置内容</span></div></pre></td></tr></table></figure>
+<p> 在spark-env.sh末尾添加以下内容（这是我的配置，你可以自行修改）：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">export</span> SCALA_HOME=/home/spark/app/scala-2.10.4</div><div class="line"><span class="built_in">export</span> JAVA_HOME=/home/spark/app/jdk1.7.0_75</div><div class="line"><span class="built_in">export</span> HADOOP_HOME=/home/spark/app/hadoop-2.6.0</div><div class="line"><span class="built_in">export</span> HADOOP_CONF_DIR=<span class="variable">$HADOOP_HOME</span>/etc/hadoop</div><div class="line">SPARK_MASTER_IP=master</div><div class="line">SPARK_LOCAL_DIRS=/home/spark/app/spark-1.3.0</div><div class="line">SPARK_DRIVER_MEMORY=1G</div></pre></td></tr></table></figure>
+<p> 注：在设置Worker进程的CPU个数和内存大小，要注意机器的实际硬件条件，如果配置的超过当前Worker节点的硬件条件，Worker进程会启动失败。</p>
+</li>
+<li><p>修改slaves文件下slaves的主机名：</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">slave1</div><div class="line">slave2</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>将配置好的spark-1.3.0文件夹分发给所有slaves吧</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">scp -r ~/app/spark-1.3.0 spark@slave1:~/workspace/</div><div class="line">scp -r ~/app/spark-1.3.0 spark@slave2:~/workspace/</div></pre></td></tr></table></figure>
+<h2 id="启动Spark"><a href="#启动Spark" class="headerlink" title="启动Spark"></a>启动Spark</h2><p>在spark的根目录下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sbin/start-all.sh</div></pre></td></tr></table></figure>
+<p>验证 Spark 是否安装成功<br>用jps检查，在 master 上应该有以下几个进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">$ jps</div><div class="line">7949 Jps</div><div class="line">7328 SecondaryNameNode</div><div class="line">7805 Master</div><div class="line">7137 NameNode</div><div class="line">7475 ResourceManager</div></pre></td></tr></table></figure>
+<p>在 slave 上应该有以下几个进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$jps</span></div><div class="line">3132 DataNode</div><div class="line">3759 Worker</div><div class="line">3858 Jps</div><div class="line">3231 NodeManager</div></pre></td></tr></table></figure>
+<p>也可以进入Spark的Web管理页面： <a href="http://master:8080" target="_blank" rel="external">http://master:8080</a></p>
+<p><strong>注意：三个节点的防火墙要关掉，不然很容易出错，这里中间很多的细节都没有涉及到，只是个大概的流程，我相信，每个人刚学的时候都不会一次性的成功，但是者未必不是好事，有些坑是需要踩过才知道，这里有很多的坑，祝大家早日脱坑。</strong></p>
+]]></content>
+      
+        <categories>
+            
+            <category> 分布式系统 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Spark </tag>
+            
+            <tag> YARN </tag>
+            
+            <tag> 分布式环境搭建 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SSH免密登录]]></title>
+      <url>/2017/05/31/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">纸上得来终觉浅，要知此事须躬行</blockquote><br>在配置集群的时候，ssh免密登录时第一步。<strong>其实linux免密登录很简单，四步就可以解决问题</strong><br><a id="more"></a></p>
+<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>假设有两台机器他们的IP和主机名是：<br><em>M1-IP</em>：<code>10.1.130.2</code>         <em>主机名</em>：<code>m1</code><br><em>M2-IP</em>：<code>10.1.130.3</code>         <em>主机名</em>：<code>m2</code><br>如果想要更改主机名，可以在每台机器的<code>/etc/hostname</code>中更改，但是需要<strong>重启生效</strong>。</p>
+<h3 id="映射主机名"><a href="#映射主机名" class="headerlink" title="映射主机名"></a>映射主机名</h3><p>每个机器都进入 <code>/etc/hosts</code> ，并添加所有的主机名和IP映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">10.1.130.2   m1</div><div class="line">10.1.130.3   m2</div></pre></td></tr></table></figure></p>
+<h3 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h3><p>执行以下命令，生成公钥，一直回车就行，如果之前有的就输入y就覆盖就行。默认目录是放在 <code>~/.ssh</code> 下面，名为<code>id_rsa.pub</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure></p>
+<h3 id="汇总公钥"><a href="#汇总公钥" class="headerlink" title="汇总公钥"></a>汇总公钥</h3><ul>
+<li><p>汇总公钥至同一机器（为了方面下一步），假如在<code>m2</code>中将公钥复制到<code>m1</code>。</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp id_rsa.pub m1@10.1.1130.2:~/.ssh/id_rsa.pub.m2</div></pre></td></tr></table></figure>
+</li>
+<li><p>将公钥合并至 <code>authorized_keys</code></p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat id_rsa.pub* &gt;&gt;authorized_keys</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="分发公钥"><a href="#分发公钥" class="headerlink" title="分发公钥"></a>分发公钥</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp authorized_keys m2@10.1.1130.3:~/.ssh</div></pre></td></tr></table></figure>
+<p>大工告成</p>
+]]></content>
+      
+        <categories>
+            
+            <category> Linux </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> 免密登录 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[HDFS常用命令]]></title>
+      <url>/2017/05/31/HDFS%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
+      <content type="html"><![CDATA[<blockquote class="blockquote-center">衣带渐宽终不悔，为伊消得人憔悴</blockquote>
+
+<h2 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h2><ul>
+<li>建立目录<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -mkdir -p /user/hadoop/examples   <span class="comment">#加上-p是所有目录都要建立</span></div><div class="line">eadoop dfs -mkdir  /user/hadoop/examples1    <span class="comment">#建立examples1目录</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+<a id="more"></a> 
+<ul>
+<li>删除目录<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -rm -r /user/hadoop/examples    #加上-r，删除examples</div><div class="line">hadoop dfs -rm -r /user                    #删除user目录</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<ul>
+<li><p>列出HDFS下的文件(夹)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -ls /                 #查看hdfs根目录下的文件夹(文件)</div><div class="line">hadoop dfs -ls /user/data        #查看某个目录下的文件夹(文件)</div></pre></td></tr></table></figure>
+</li>
+<li><p>查看文件内容</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -cat /user/data/in/word.txt     #查看文件内容，必须是一个文件，不能时目录</div></pre></td></tr></table></figure>
+</li>
+<li><p>将hdfs上的文件(夹)复制到本地的文件系统</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -get /user/data   rename                                                      #将data目录复制到当前执行该命令的本地文件系统，并重命名为rename</div><div class="line">hadoop dfs -get /user/data  /home/user/data  rename                                     #将data目录复制到本地指定目录下，并重命名为rename</div><div class="line"></div><div class="line">hadoop dfs -get /user/data  /home/user/data/core-site.xml  /home/user/data/rename.xml    #将core-site.xml复制到本地指定目录下，并重命名为rename.xml</div><div class="line"></div><div class="line">hadoop dfs -getmerger /user/data/in merge.xml                                            #将hdfs中某个目录下的的文件合并并下载到本地当前目录</div></pre></td></tr></table></figure>
+</li>
+<li><p>将本地文件系统上传到hdfs上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfs -put file /user/data</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="管理与更新"><a href="#管理与更新" class="headerlink" title="管理与更新"></a>管理与更新</h2><ul>
+<li><p>执行基本信息, 查看HDFS的基本统计信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop dfsadmin -report</div></pre></td></tr></table></figure>
+</li>
+<li><p>HDFS的数据在各个DataNode中的分布可能很不均匀，尤其是在DataNode节点出现故障或新增DataNode节点时。新增数据块时NameNode对DataNode节点的选择策略也有可能导致数据块分布不均匀。用户可以使用命令重新平衡DataNode上的数据块的分布:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hadoop$bin/start-balancer.sh</div></pre></td></tr></table></figure>
+</li>
+</ul>
+]]></content>
+      
+        <categories>
+            
+            <category> 分布式系统 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> hadoop </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Git常用命令]]></title>
+      <url>/2017/05/31/Git%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">优秀的人，不是不合群，而是他们合群的人里面没有你</blockquote></p>
+<h2 id="获取仓库"><a href="#获取仓库" class="headerlink" title="获取仓库"></a>获取仓库</h2><ul>
+<li>初始化一个版本仓库<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git init</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<a id="more"></a>
+<ul>
+<li><p>Clone远程版本库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">clone</span> git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
+</li>
+<li><p>添加远程版本库origin，语法为 git remote add [shortname] [url]</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote add origin git@xbc.me:wordpress.git</div></pre></td></tr></table></figure>
+</li>
+<li><p>查看远程仓库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote -v</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="提交修改"><a href="#提交修改" class="headerlink" title="提交修改"></a>提交修改</h2><ul>
+<li><p>添加当前修改的文件到暂存区</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add .</div></pre></td></tr></table></figure>
+</li>
+<li><p>如果你自动追踪文件，包括你已经手动删除的，状态为Deleted的文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add -u</div></pre></td></tr></table></figure>
+</li>
+<li><p>提交你的修改</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"你的注释"</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>推送你的更新到远程服务器,语法为 git push [远程名] [本地分支]:[远程分支]</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git push origin master</div></pre></td></tr></table></figure>
+</li>
+<li><p>查看文件状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git status</div></pre></td></tr></table></figure>
+</li>
+<li><p>跟踪新文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git add readme.txt</div></pre></td></tr></table></figure>
+</li>
+<li><p>从当前跟踪列表移除文件，并完全删除</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm readme.txt</div></pre></td></tr></table></figure>
+</li>
+<li><p>仅在暂存区删除，保留文件在当前目录，不再跟踪</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git rm –cached readme.txt</div></pre></td></tr></table></figure>
+</li>
+<li><p>重命名文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git mv reademe.txt readme</div></pre></td></tr></table></figure>
+</li>
+<li><p>查看提交的历史记录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">log</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>修改最后一次提交注释的，利用–amend参数</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git commit --amend</div></pre></td></tr></table></figure>
+</li>
+<li><p>忘记提交某些修改，下面的三条命令只会得到一个提交</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">git commit –m <span class="string">"add readme.txt"</span></div><div class="line">git add readme_forgotten</div><div class="line">git commit –amend</div></pre></td></tr></table></figure>
+</li>
+<li><p>假设你已经使用<code>git add .</code>，将修改过的文件a、b加到暂存区<br>现在你只想提交a文件，不想提交b文件，应该这样</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git reset HEAD b</div></pre></td></tr></table></figure>
+</li>
+<li><p>取消对文件的修改</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –- readme.txt</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h2><ul>
+<li><p>创建一个分支</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch iss53</div></pre></td></tr></table></figure>
+</li>
+<li><p>切换工作目录到iss53</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout iss53</div></pre></td></tr></table></figure>
+</li>
+<li><p>将上面的命令合在一起，创建iss53分支并切换到iss53</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git chekcout –b iss53</div></pre></td></tr></table></figure>
+</li>
+<li><p>合并iss53分支，当前工作目录为master</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git merge iss53</div></pre></td></tr></table></figure>
+</li>
+<li><p>合并完成后，没有出现冲突，删除iss53分支</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git branch –d iss53</div></pre></td></tr></table></figure>
+</li>
+<li><p>拉去远程仓库的数据，语法为 git fetch [remote-name]</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git fetch</div></pre></td></tr></table></figure>
+</li>
+<li><p>fetch 会拉去最新的远程仓库数据，但不会自动到当前目录下，要自动合并</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git pull</div></pre></td></tr></table></figure>
+</li>
+<li><p>查看远程仓库的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote show origin</div></pre></td></tr></table></figure>
+</li>
+<li><p>建立本地的dev分支追踪远程仓库的develop分支</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git checkout –b dev origin/develop+ <span class="comment">#分支管理</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+]]></content>
+      
+        <categories>
+            
+            <category> Git </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> git </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Redis概述]]></title>
+      <url>/2017/05/13/Redis%E6%A6%82%E8%BF%B0/</url>
+      <content type="html"><![CDATA[<p><blockquote class="blockquote-center">逃避未必能躲过，面对未必最难过</blockquote><br>在互联网时代的背景下，大数据带来的冲击，是的传统的关系型数据库结构以及数据类型无法应对，比例如大数据时代下的特点是3V(海量Volume，多样Variety，实时Velocity)，3高（高并发，高可用，高性能）。这样的特点也就是的许多菲关系型数据库NoSql（not only sql）的数据库应然而生。<br><a id="more"></a></p>
+<h2 id="NoSql的概述"><a href="#NoSql的概述" class="headerlink" title="NoSql的概述"></a>NoSql的概述</h2><h3 id="NoSql简述"><a href="#NoSql简述" class="headerlink" title="NoSql简述"></a>NoSql简述</h3><p>传统的关系型数据库都是基于关系来的一对一，一对多，多对多等，这样的模型对复杂的社交网络，推荐系统中，这些场景中更注重于一种关系图谱的构建，传统的关系型数据库做这个是非常复杂和困难的。所以，一些非关系型数据库出现来解决这些问题，常用的非关系型数据库有Redis，Memcache，Mongdb。</p>
+<h3 id="NoSql数据库模型简介"><a href="#NoSql数据库模型简介" class="headerlink" title="NoSql数据库模型简介"></a>NoSql数据库模型简介</h3><p>聚合模型：KV键值对,BSON，列族，图形</p>
+<h3 id="在分布式数据库中CAP原理CAP-BASE"><a href="#在分布式数据库中CAP原理CAP-BASE" class="headerlink" title="在分布式数据库中CAP原理CAP+BASE"></a>在分布式数据库中CAP原理CAP+BASE</h3><h4 id="传统的ACID分别是什么"><a href="#传统的ACID分别是什么" class="headerlink" title="传统的ACID分别是什么"></a>传统的ACID分别是什么</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">A (Atomicity) 原子性</div><div class="line">C (Consistency) 一致性</div><div class="line">I (Isolation) 独立性</div><div class="line">D (Durability) 持久性</div></pre></td></tr></table></figure>
+<h4 id="分布式数据库CAP"><a href="#分布式数据库CAP" class="headerlink" title="分布式数据库CAP"></a>分布式数据库CAP</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">C:Consistency（强一致性）</div><div class="line">A:Availability（可用性）</div><div class="line">P:Partition tolerance（分区容错性）</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">CA: 传统Oracle数据库 </div><div class="line">AP: 大多数网站架构的选择 </div><div class="line">CP: Redis、Mongodb</div></pre></td></tr></table></figure>
+<h4 id="CAP的3进2"><a href="#CAP的3进2" class="headerlink" title="CAP的3进2"></a>CAP的3进2</h4><p>CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，最多只能同时较好的满足两个。<br>因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。</div><div class="line">CP - 满足一致性，分区容忍必的系统，通常性能不是特别高。</div><div class="line">AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。</div></pre></td></tr></table></figure>
+<h4 id="BASE"><a href="#BASE" class="headerlink" title="BASE"></a>BASE</h4><p>BASE就是为了解决关系数据库强一致性引起的问题而引起的可用性降低而提出的解决方案。<br>BASE其实是下面三个术语的缩写：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">基本可用（Basically Available）</div><div class="line">软状态（Soft state）</div><div class="line">最终一致（Eventually consistent）</div></pre></td></tr></table></figure></p>
+<p>它的思想是通过让系统放松对某一时刻数据一致性的要求来换取系统整体伸缩性和性能上改观。为什么这么说呢，缘由就在于大型系统往往由于地域分布和极高性能的要求，不可能采用分布式事务来完成这些指标，要想获得这些指标，我们必须采用另外一种方式来完成，这里BASE就是解决这个问题的办法.</p>
+<h3 id="NoSql数据库四大分类"><a href="#NoSql数据库四大分类" class="headerlink" title="NoSql数据库四大分类"></a>NoSql数据库四大分类</h3><ol>
+<li><p><strong>KV键值：典型介绍</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">新浪：BerkeleyDB+redis</div><div class="line">美团：redis+tair</div><div class="line">阿里、百度：memcache+redis</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>文档型数据库(bson格式比较多)：典型介绍</strong>  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">CouchDB</div><div class="line">MongoDB</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>列存储数据库</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Cassandra</div><div class="line">HBase</div><div class="line">分布式文件系统</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>图关系数据库</strong><br>它不是放图形的，放的是关系比如:朋友圈社交网络、广告推荐系统、社交网络，推荐系统等。专注于构建关系图谱</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Neo4J</div><div class="line">InfoGrid</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="Redis入门介绍"><a href="#Redis入门介绍" class="headerlink" title="Redis入门介绍"></a>Redis入门介绍</h2><h3 id="入门概述"><a href="#入门概述" class="headerlink" title="入门概述"></a>入门概述</h3><h4 id="1-是什么"><a href="#1-是什么" class="headerlink" title="1.是什么"></a>1.是什么</h4><p>Redis:REmote DIctionary Server(远程字典服务器)是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key/value)分布式内存数据库，基于内存运行,并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一,也被人们称为数据结构服务器。Redis 与其他 key - value 缓存产品有以下三个特点:</p>
+<ol>
+<li>Redis支持数据的持久化，可以将内存中的数据保持在磁盘中，重启的时候可以再次加载进行使用。</li>
+<li>Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储。</li>
+<li>Redis支持数据的备份，即master-slave模式的数据备份。</li>
+</ol>
+<h4 id="2-能干嘛"><a href="#2-能干嘛" class="headerlink" title="2.能干嘛"></a>2.能干嘛</h4><ul>
+<li>内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务</li>
+<li>取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面</li>
+<li>模拟类似于HttpSession这种需要设定过期时间的功能</li>
+<li>发布、订阅消息系统</li>
+<li>定时器、计数器</li>
+</ul>
+<h4 id="3-安装"><a href="#3-安装" class="headerlink" title="3.安装"></a>3.安装</h4><p>Linux版安装<br>下载获得redis-3.0.4.tar.gz后将它放入我们的Linux目录/opt<br>/opt目录下，解压命令:tar -zxvf redis-3.0.4.tar.gz<br>解压完成后出现文件夹：redis-3.0.4<br>进入目录:cd redis-3.0.4<br>在redis-3.0.4目录下执行make命令</p>
+<h4 id="4-启动"><a href="#4-启动" class="headerlink" title="4.启动"></a>4.启动</h4><p>修改redis.conf文件将里面的daemonize no 改成 yes，让服务在后台启动<br>将默认的redis.conf拷贝到自己定义好的一个路径下，比如/myconf<br>启动: redis-server /myconf/redis.conf, redis-cli<br>连通测试:/usr/local/bin目录下运行redis-server，运行拷贝出存放了自定义conf文件目录下的redis.conf文件  </p>
+<h4 id="5-关闭"><a href="#5-关闭" class="headerlink" title="5.关闭"></a>5.关闭</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">单实例关闭：redis-cli shutdown</div><div class="line">多实例关闭，指定端口关闭:redis-cli -p 6379 shutdown</div></pre></td></tr></table></figure>
+<h4 id="6-Redis启动后杂项基础知识讲解"><a href="#6-Redis启动后杂项基础知识讲解" class="headerlink" title="6.Redis启动后杂项基础知识讲解"></a>6.Redis启动后杂项基础知识讲解</h4><ul>
+<li>单进程:单进程模型来处理客户端的请求。对读写等事件的响应,是通过对epoll函数的包装来做到的。Redis的实际处理速度完全依靠主进程的执行效率,epoll是Linux内核为处理大批量文件描述符而作了改进的epoll，是Linux下多路复用IO接口select/poll的增强版本，它能显著提高程序在大量并发连接中只有少量活跃的情况下的系统CPU利用率。</li>
+<li>默认<strong>16</strong>个数据库，类似数组下表从零开始，初始默认使用零号库</li>
+<li>select命令切换数据库</li>
+<li>dbsize查看当前数据库的key的数量</li>
+<li>flushdb：清空当前库</li>
+<li>Flushall:通杀全部库</li>
+<li>统一密码管理，16个库都是同样密码，要么都OK要么一个也连接不上</li>
+<li>Redis索引都是<strong>从零开始</strong></li>
+<li>为什么默认端口是<strong>6379</strong></li>
+</ul>
+<h2 id="Redis数据类型"><a href="#Redis数据类型" class="headerlink" title="Redis数据类型"></a>Redis数据类型</h2><h3 id="一、Redis的五大数据类型"><a href="#一、Redis的五大数据类型" class="headerlink" title="一、Redis的五大数据类型"></a>一、Redis的五大数据类型</h3><h4 id="1-string（字符串）"><a href="#1-string（字符串）" class="headerlink" title="1.string（字符串）"></a>1.string（字符串）</h4><ul>
+<li>string是redis最基本的类型，你可以理解成与Memcached一模一样的类型，一个key对应一个value。</li>
+<li>string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。</li>
+<li>string类型是Redis最基本的数据类型，一个redis中字符串value最多可以是<strong>512M</strong>。</li>
+</ul>
+<h4 id="2-hash（哈希，类似java里的Map）"><a href="#2-hash（哈希，类似java里的Map）" class="headerlink" title="2.hash（哈希，类似java里的Map）"></a>2.hash（哈希，类似java里的Map）</h4><ul>
+<li>Redis hash 是一个键值对集合。</li>
+<li>Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象。</li>
+<li>类似Java里面的Map<string,object></string,object></li>
+</ul>
+<h4 id="3-list（列表）"><a href="#3-list（列表）" class="headerlink" title="3.list（列表）"></a>3.list（列表）</h4><ul>
+<li>Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素导列表的头部（左边）或者尾部（右边）。</li>
+<li>底层实际是个链表。</li>
+</ul>
+<h4 id="4-set（集合）"><a href="#4-set（集合）" class="headerlink" title="4.set（集合）"></a>4.set（集合）</h4><ul>
+<li>Redis的Set是string类型的无序集合。它是通过HashTable实现实现的。</li>
+</ul>
+<h4 id="5-zset-sorted-set：有序集合"><a href="#5-zset-sorted-set：有序集合" class="headerlink" title="5.zset(sorted set：有序集合)"></a>5.zset(sorted set：有序集合)</h4><ul>
+<li>Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。不同的是每个元素都会关联一个double类型的分数。</li>
+<li>redis正是通过分数来为集合中的成员进行从小到大的排序。zset的成员是唯一的,但分数(score)却可以重复。</li>
+</ul>
+<h3 id="二、常用命令（官网常用命令"><a href="#二、常用命令（官网常用命令" class="headerlink" title="二、常用命令（官网常用命令)"></a>二、常用命令（<a href="http://redisdoc.com/" target="_blank" rel="external">官网常用命令</a>)</h3><h4 id="键（keys）"><a href="#键（keys）" class="headerlink" title="键（keys）"></a>键（keys）</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">#获取当前库的全部键</div><div class="line">keys *</div><div class="line">#判断某个key是否存在</div><div class="line">exists key</div><div class="line">#当前库就没有了，被移除了</div><div class="line">move key db</div><div class="line">#为给定的key设置过期时间</div><div class="line">expire key 秒钟</div><div class="line">#查看还有多少秒过期，-1表示永不过期，-2表示已过期</div><div class="line">ttl key </div><div class="line">#查看你的key是什么类型</div><div class="line">type key</div></pre></td></tr></table></figure>
+<h4 id="字符串（String）"><a href="#字符串（String）" class="headerlink" title="字符串（String）"></a>字符串（String）</h4><p>它是单值单value的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">set/get/del/append/strlen</div><div class="line">#一定要是数字才能进行加减</div><div class="line">Incr/decr/incrby/decrby</div><div class="line">#获取指定区间范围内的值，类似between......and的关系，从零到负一表示全部</div><div class="line">getrange</div><div class="line">#设置指定区间范围内的值，格式是setrange key值 具体值</div><div class="line">setrange</div><div class="line">setex(set with expire)键秒值/setnx(set if not exist)</div><div class="line">#同时设置一个或多个 key-value 对</div><div class="line">mset</div><div class="line">#获取所有(一个或多个)给定 key 的值</div><div class="line">mget</div><div class="line">#同时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在</div><div class="line">msetnx</div><div class="line">#先get再set</div><div class="line">getset</div></pre></td></tr></table></figure></p>
+<h4 id="Redis列表-List"><a href="#Redis列表-List" class="headerlink" title="Redis列表(List)"></a>Redis列表(List)</h4><p>它是单值多value<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">lpush/rpush/lrange</div><div class="line">lpop/rpop</div><div class="line">lindex，按照索引下标获得元素(从上到下)</div><div class="line">llen</div><div class="line">#删N个value</div><div class="line">lrem key </div><div class="line">#截取指定范围的值后再赋值给key</div><div class="line">ltrim key 开始index 结束index</div><div class="line">rpoplpush 源列表 目的列表</div><div class="line">lset key index value</div><div class="line">linsert key  before/after 值1 值2</div></pre></td></tr></table></figure></p>
+<p><strong>性能总结</strong>:它是一个字符串链表，left、right都可以插入添加；如果键不存在，创建新的链表；如果键已存在，新增内容；如果值全移除，对应的键也就消失了。链表的操作无论是头和尾效率都极高，但假如是对中间元素进行操作，效率就很惨淡了。</p>
+<h4 id="Redis集合-Set"><a href="#Redis集合-Set" class="headerlink" title="Redis集合(Set)"></a>Redis集合(Set)</h4><p>它是单值多value</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">sadd/smembers/sismember</div><div class="line">#获取集合里面的元素个数</div><div class="line">scard</div><div class="line">#删除集合中元素</div><div class="line">srem key value </div><div class="line">#如果超过最大数量就全部取出，如果写的值是负数，比如-3 ，表示需要取出3个，但是可能会有重复值。</div><div class="line">srandmember key 某个整数(随机出几个数)</div><div class="line">#随机出栈</div><div class="line">spop key</div><div class="line">#作用是将key1里的某个值赋给key2</div><div class="line">smove key1 key2 在key1里某个值</div><div class="line">#在第一个set里面而不在后面任何一个set里面的项</div><div class="line">差集：sdiff</div><div class="line">#在第一个set里面并且在后面任何一个set里面的项</div><div class="line">交集：sinter</div><div class="line">#在第一个set里面或者在后面任何一个set里面的项</div><div class="line">并集：sunion</div></pre></td></tr></table></figure>
+<h4 id="Redis哈希-Hash"><a href="#Redis哈希-Hash" class="headerlink" title="Redis哈希(Hash)"></a>Redis哈希(Hash)</h4><p>KV模式不变，但V是一个键值对</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">hset/hget/hmset/hmget/hgetall/hdel</div><div class="line">hlen</div><div class="line">hexists key 在key里面的某个值的key</div><div class="line">hkeys/hvals</div><div class="line">hincrby/hincrbyfloat</div><div class="line">hsetnx</div></pre></td></tr></table></figure>
+<h4 id="Redis有序集合Zset-sorted-set"><a href="#Redis有序集合Zset-sorted-set" class="headerlink" title="Redis有序集合Zset(sorted set)"></a>Redis有序集合Zset(sorted set)</h4><p>在set基础上，加一个score值。<br>之前set是k1 v1 v2 v3，现在zset是k1 score1 v1 score2 v2</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">zadd/zrange </div><div class="line">zrem key 某score下对应的value值，作用是删除元素</div><div class="line">#获取集合中元素个数</div><div class="line">zcard</div><div class="line">#获取分数区间内元素个数</div><div class="line">zcount</div><div class="line">zcount key 开始分数区间 结束分数区间</div><div class="line">#获取value在zset中的下标位置</div><div class="line">zrank</div><div class="line">#按照值获得对应的分数</div><div class="line">zscore</div><div class="line">#作用是逆序获得下标值</div><div class="line">zrevrank key values值，</div><div class="line">zrevrange</div><div class="line">zrevrangebyscore  key 结束score 开始score</div></pre></td></tr></table></figure>
+<h2 id="解析配置文件"><a href="#解析配置文件" class="headerlink" title="解析配置文件"></a>解析配置文件</h2><h3 id="redis-conf"><a href="#redis-conf" class="headerlink" title="redis.conf"></a>redis.conf</h3><ol>
+<li><p><strong>GENERAL通用</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">daemonize:默认为no，改为yes</div><div class="line">pidfile</div><div class="line">port</div><div class="line">tcp-backlog:设置tcp的backlog，backlog其实是一个连接队列，backlog队列总和=未完成三次握手队列 + 已经完成三次握手队列。在高并发环境下你需要一个高backlog值来避免慢客户端连接问题。注意Linux内核会将这个值减小到/proc/sys/net/core/somaxconn的值，所以需要确认增大somaxconn和tcp_max_syn_backlog两个值来达到想要的效果</div><div class="line">timeout</div><div class="line">bind </div><div class="line">#单位为秒，如果设置为0，则不会进行Keepalive检测，建议设置成60 </div><div class="line">tcp-keepalive</div><div class="line">#日志级别</div><div class="line">loglevel</div><div class="line">#日志文件名</div><div class="line">logfile</div><div class="line">#是否把日志输出到syslog中</div><div class="line">syslog-enabled</div><div class="line">#指定syslog里的日志标志</div><div class="line">syslog-ident</div><div class="line">#指定syslog设备，值可以是USER或LOCAL0-LOCAL7</div><div class="line">syslog-facility</div><div class="line">databases</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>SNAPSHOTTING快照</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">save</div><div class="line">	save 秒钟 写操作次数</div><div class="line">	禁用</div><div class="line">stop-writes-on-bgsave-error</div><div class="line">rdbcompression</div><div class="line">rdbchecksum</div><div class="line">dbfilename</div><div class="line">dir</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>REPLICATION复制</strong></p>
+</li>
+<li><strong>SECURITY安全</strong><br>访问密码的查看、设置和取消</li>
+<li><p><strong>LIMITS限制</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">#最大客户端个数</div><div class="line">maxclients</div><div class="line">#允许最大使用内存</div><div class="line">maxmemory</div><div class="line">#内存过期清除策略</div><div class="line">maxmemory-policy</div><div class="line">  #使用LRU算法移除key，只对设置了过期时间的键</div><div class="line">  (1)volatile-lru</div><div class="line">  #使用LRU算法移除key</div><div class="line">  (2)allkeys-lru</div><div class="line">  #在过期集合中移除随机的key，只对设置了过期时间的键</div><div class="line">  (3)volatile-random</div><div class="line">  #移除随机的key</div><div class="line">  (4)allkeys-random</div><div class="line">  #移除那些TTL值最小的key，即那些最近要过期的key</div><div class="line">  (5)volatile-ttl</div><div class="line">  #不进行移除。针对写操作，只是返回错误信息</div><div class="line">  (6)noeviction</div><div class="line">#设置样本数量，LRU算法和最小TTL算法都并非是精确的算法，而是估算值，所以</div><div class="line">#你可以设置样本的大小，redis默认会检查这么多个key并选择其中LRU的那个。</div><div class="line">maxmemory-samples</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>APPEND ONLY MODE追加</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">#是否打开</div><div class="line">appendonly</div><div class="line">#文件名称</div><div class="line">appendfilename</div><div class="line">#追加策略</div><div class="line">appendfsync</div><div class="line">  #同步持久化 每次发生数据变更会被立即记录到磁盘  性能较差但数据完整性比较好</div><div class="line">  (1)always</div><div class="line">  #出厂默认推荐，异步操作，每秒记录   如果一秒内宕机，有数据丢失</div><div class="line">  (2)everysec</div><div class="line">  #不追加，不推荐</div><div class="line">  (3)no</div><div class="line">#重写时是否可以运用Appendfsync，用默认no即可，保证数据安全性。</div><div class="line">no-appendfsync-on-rewrite</div><div class="line">  #设置重写的基准值</div><div class="line">  (1)auto-aof-rewrite-min-size</div><div class="line">  #设置重写的基准值</div><div class="line">  (2)auto-aof-rewrite-percentage</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>常见配置<code>redis.conf</code>介绍总结</strong></p>
+<ol>
+<li><p>Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用<code>yes</code>启用守护进程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">daemonize no</div></pre></td></tr></table></figure>
+</li>
+<li><p>当Redis以守护进程方式运行时，Redis默认会把pid写入<code>/var/run/redis.pid</code>文件，可以通过pidfile指定。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pidfile /var/run/redis.pid</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">port 6379</div></pre></td></tr></table></figure>
+</li>
+<li><p>绑定的主机地址。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">bind 127.0.0.1</div></pre></td></tr></table></figure>
+</li>
+<li><p>当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">timeout 300</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">loglevel verbose</div></pre></td></tr></table></figure>
+</li>
+<li><p>日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给<code>/dev/null</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">logfile stdout</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置数据库的数量，默认数据库为0，可以使用<code>SELECT &lt;dbid&gt;</code>命令在连接上指定数据库id。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">databases 16</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">save &lt;seconds&gt; &lt;changes&gt;</div></pre></td></tr></table></figure>
+<p>Redis默认配置文件中提供了三个条件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">#900秒（15分钟）内有1个更改</div><div class="line">save 900 1</div><div class="line">#300秒（5分钟)内有10个更改</div><div class="line">save 300 10</div><div class="line">#60秒内有10000个更改</div><div class="line">save 60 10000</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定存储至本地数据库时是否压缩数据，默认为<code>yes</code>，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rdbcompression yes</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定本地数据库文件名，默认值为<code>dump.rdb</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbfilename dump.rdb</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定本地数据库存放目录。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dir ./</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置当本机为slave服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">slaveof &lt;masterip&gt; &lt;masterport&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>当master服务设置了密码保护时，slave服务连接master的密码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">masterauth &lt;master-password&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过<code>AUTH &lt;password&gt;</code>命令提供密码，默认关闭。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">requirepass foobared</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置<code>maxclients 0</code>，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">maxclients 128</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">maxmemory &lt;bytes&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为<code>no</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">appendonly no</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定更新日志文件名，默认为appendonly.aof</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">appendfilename appendonly.aof</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定更新日志条件，共有3个可选值： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">appendfsync everysec</div><div class="line">no：表示等操作系统进行数据缓存同步到磁盘（快） </div><div class="line">always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） </div><div class="line">everysec：表示每秒同步一次（折衷，默认值）</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定是否启用虚拟内存机制，默认值为<code>no</code>，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vm-enabled no</div></pre></td></tr></table></figure>
+</li>
+<li><p>虚拟内存文件路径，默认值为<code>/tmp/redis.swap</code>，不可多个Redis实例共享。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vm-swap-file /tmp/redis.swap</div></pre></td></tr></table></figure>
+</li>
+<li><p>将所有大于<code>vm-max-memory</code>的数据存入虚拟内存,无论<code>vm-max-memory</code>设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),也就是说,当<code>vm-max-memory</code>设置为0的时候,其实是所有value都存在于磁盘。默认值为0。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vm-max-memory 0</div></pre></td></tr></table></figure>
+</li>
+<li><p>Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，<code>vm-page-size</code>是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vm-page-size 32</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vm-pages 134217728</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vm-max-threads 4</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glueoutputbuf yes</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hash-max-zipmap-entries 64</div><div class="line">hash-max-zipmap-value 512</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">activerehashing yes</div></pre></td></tr></table></figure>
+</li>
+<li><p>指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">include /path/to/local.conf</div></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="redis的持久化"><a href="#redis的持久化" class="headerlink" title="redis的持久化"></a>redis的持久化</h2><h3 id="RDB（Redis-DataBase）"><a href="#RDB（Redis-DataBase）" class="headerlink" title="RDB（Redis DataBase）"></a>RDB（Redis DataBase）</h3><p>在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里。它可以手动执行，也可以再<code>redis.conf</code>中配置，定期执行。Redis会单独创（fork）一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能。如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那RDB方式要比AOF方式更加的高效。fork的作用是复制一个与当前进程一样的进程。新进程的所有数据（变量、环境变量、程序计数器等）数值都和原进程一致，但是是一个全新的进程，并作为原进程的子进程。rdb保存的默认是<code>dump.rdb</code>文件，它是经过压缩的二进制文件。  </p>
+<p>RDB的缺点是最后一次持久化后的数据可能丢失。</p>
+<ul>
+<li><p><strong>自动保存间隔</strong><br>BGSAVE可以在不阻塞主进程的情况下完成数据的备份。可以通过<code>redis.conf</code>中设置多个自动保存条件，只要有一个条件被满足，服务器就会执行<code>BGSAVE</code>命令。</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"># 以下配置表示的条件：</div><div class="line"># 服务器在900秒之内被修改了1次</div><div class="line">save 900 1</div><div class="line"># 服务器在300秒之内被修改了10次</div><div class="line">save 300 10</div><div class="line"># 服务器在60秒之内被修改了10000次</div><div class="line">save 60 10000</div><div class="line">#表示不同步</div><div class="line">save “”</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>如何触发（创建）RDB快照</strong><br>冷拷贝后重新使用<br>  可以<code>cp dump.rdb dump_new.rdb</code><br>RDB文件可以通过两个命令来生成：命令<code>save</code>或者是<code>bgsave</code><br>  <code>Save</code>：save时只管保存，其它不管，全部阻塞。<br>  <code>BGSAVE</code>：Redis会在后台异步进行快照操作，快照同时还可以响应客户端请求。即派生(fork)一个子进程来创建新的RDB文件，记录接收到BGSAVE当时的数据库状态，父进程继续处理接收到的命令，子进程完成文件的创建之后，会发送信号给父进程，而与此同时，父进程处理命令的同时，通过轮询来接收子进程的信号。可以通过<code>lastsave</code>命令获取最后一次成功执行快照的时间，执行<code>flushall</code>命令，也会产生<code>dump.rdb</code>文件，但里面是空的，无意义。</p>
+</li>
+<li><p><strong>如何恢复</strong><br>而RDB文件的载入一般情况是自动的，redis服务器启动的时候，redis服务器再启动的时候如果检测到RDB文件的存在，那么redis会自动载入这个文件。</p>
+</li>
+<li><p><strong>如何停止</strong><br>动态所有停止RDB保存规则的方法：<code>redis-cli config set save &quot;&quot;</code></p>
+</li>
+<li><p><strong>优劣势</strong><br>  适合大规模的数据恢复<br>  对数据完整性和一致性要求不高<br>  在一定间隔时间做一次备份，所以如果redis意外down掉的话，就会丢失最后一次快照后的所有修改<br>fork的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑</p>
+</li>
+</ul>
+<h3 id="AOF（Append-Only-File）"><a href="#AOF（Append-Only-File）" class="headerlink" title="AOF（Append Only File）"></a>AOF（Append Only File）</h3><p>以日志的形式来记录每个写操作，将Redis执行过的所有写指令记录下来(读操作不记录)，只许追加文件但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话就根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作Aof保存的是<code>appendonly.aof</code>文件。</p>
+<ul>
+<li><p><strong>AOF启动/修复/恢复</strong><br><strong>正常恢复</strong><br>  启动：设置<code>Yes</code>，修改默认的<code>appendonly no</code>，改为<code>yes</code><br>  将有数据的aof文件复制一份保存到对应目录(config get dir)<br>  恢复：重启redis然后重新加载<br><strong>异常恢复</strong><br>  启动：设置<code>Yes</code>，修改默认的<code>appendonly no</code>，改为<code>yes</code><br>  备份被写坏的AOF文件<br>  修复：<code>redis-check-aof --fix</code>进行修复<br>  恢复：重启redis然后重新加载</p>
+</li>
+<li><p><strong>rewrite</strong><br>AOF采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制,当AOF文件的大小超过所设定的阈值时，Redis就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集，可以使用命令<code>bgrewriteaof</code>。<br>重写原理<br>AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句。重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似。</p>
+</li>
+<li><p><strong>触发机制</strong><br>Redis会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次rewrite后大小的一倍且文件大于64M时触发<br><strong>优势</strong><br>  每修改同步：<code>appendfsync always</code>   同步持久化 每次发生数据变更会被立即记录到磁盘，性能较差但数据完整性比较好<br>  每秒同步：<code>appendfsync everysec</code>异步操作，每秒记录   如果一秒内宕机，有数据丢失<br>  不同步：<code>appendfsync no</code>   从不同步<br><strong>劣势</strong><br>  相同数据集的数据而言aof文件要远大于rdb文件，恢复速度慢于rdb。<br>  aof运行效率要慢于rdb,每秒同步策略效率较好，不同步效率和rdb相同。</p>
+</li>
+<li><p><strong>官网建议</strong><br>RDB持久化方式能够在指定的时间间隔能对你的数据进行快照存储<br>AOF持久化方式记录每次对服务器写的操作,当服务器重启的时候会重新执行这些<br>命令来恢复原始的数据,AOF命令以redis协议追加保存每次写的操作到文件末尾.<br>Redis还能对AOF文件进行后台重写,使得AOF文件的体积不至于过大<br>只做缓存：如果你只希望你的数据在服务器运行的时候存在,你也可以不使用任何持久化方式.<br>同时开启两种持久化方式<br>在这种情况下,当redis重启的时候会优先载入AOF文件来恢复原始的数据,<br>因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整.<br>RDB的数据不实时，同时使用两者时服务器重启也只会找AOF文件。那要不要只使用AOF呢？<br>作者建议不要，因为RDB更适合用于备份数据库(AOF在不断变化不好备份)，<br>快速重启，而且不会有AOF可能潜在的bug，留着作为一个万一的手段。</p>
+</li>
+<li><p><strong>性能建议</strong><br>因为RDB文件只用作后备用途，建议只在Slave上持久化RDB文件，而且只要15分钟备份一次就够了，只保留<code>save 900 1</code>这条规则。<br>如果Enalbe AOF，好处是在最恶劣情况下也只会丢失不超过两秒数据，启动脚本较简单只load自己的AOF文件就可以了。代价一是带来了持续的IO，二是AOF rewrite的最后将rewrite过程中产生的新数据写到新文件造成的阻塞几乎是不可避免的。只要硬盘许可，应该尽量减少AOF rewrite的频率，AOF重写的基础大小默认值64M太小了，可以设到5G以上。默认超过原大小100%大小时重写可以改到适当的数值。<br>如果不Enable AOF ，仅靠Master-Slave Replication 实现高可用性也可以。能省掉一大笔IO也减少了rewrite时带来的系统波动。代价是如果Master/Slave同时倒掉，会丢失十几分钟的数据，启动脚本也要比较两个Master/Slave中的RDB文件，载入较新的那个。新浪微博就选用了这种架构。</p>
+</li>
+</ul>
+<h2 id="Redis的事务"><a href="#Redis的事务" class="headerlink" title="Redis的事务"></a>Redis的事务</h2><p>可以一次执行多个命令，本质是一组命令的集合。一个事务中的所有命令都会序列化，按顺序地串行化执行而不会被其它命令插入，不许加塞，一个队列中，一次性、顺序性、排他性的执行一系列命令。</p>
+<ul>
+<li><p><strong>常见案例</strong><br>(1)正常执行<br>(2)放弃事务–&gt;中途放弃事物<br>(3)全体连坐–&gt;如果中间有“错误”则全部放弃执行<br>(4)冤头债主–&gt;执行过程中遇到某个不可执行的操作，则其他可以执行的放行。<br>(5)watch监控</p>
+</li>
+<li><p><strong>悲观锁/乐观锁/CAS(Check And Set)</strong><br><strong>悲观锁</strong>：提交版本必须大于记录当前版本才能执行更新，传统的关系型数据库里边就用到了很多这种锁机制，比如行锁，表锁等，读锁，写锁等，都是在做操作之前先上锁。<br><strong>乐观锁</strong>：每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，可以使用版本号等机制。乐观锁适用于多读的应用类型，这样可以提高吞吐量。<br><strong>案例</strong>:  初始化信用卡可用余额和欠额，无加塞篡改，先监控再开启multi，保证两笔金额变动在同一个事务内，有加塞篡改，监控了key，如果key被修改了，后面一个事务的执行失效，unwatch一旦执行了exec之前加的监控锁都会被取消掉了。<br><strong>CSA</strong></p>
+</li>
+<li><p><strong>小结</strong><br>Watch指令，类似乐观锁，事务提交时，如果Key的值已被别的客户端改变，比如某个list已被别的客户端push/pop过了，整个事务队列都不会被执行通过WATCH命令在事务执行之前监控了多个Keys，倘若在WATCH之后有任何Key的值发生了变化，EXEC命令执行的事务都将被放弃，同时返回Nullmulti-bulk应答以通知调用者事务执行失败。</p>
+<ul>
+<li><strong>3阶段</strong><ol>
+<li>开启：以MULTI开始一个事务</li>
+<li>入队：将多个命令入队到事务中，接到这些命令并不会立即执行，而是放到等待执行的事务队列里面</li>
+<li>执行：由EXEC命令触发事务  </li>
+</ol>
+</li>
+<li><strong>3特性</strong>  <ol>
+<li>单独的隔离操作：事务中的所有命令都会序列化、按顺序地执行。事务在执行的过程中，不会被其他客户端发送来的命令请求所打断。</li>
+<li>没有隔离级别的概念：队列中的命令没有提交之前都不会实际的被执行，因为事务提交前任何指令都不会被实际执行，也就不存在”事务内的查询要看到事务里的更新，在事务外查询不能看到”这个让人万分头痛的问题。</li>
+<li>不保证原子性：redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Redis的发布订阅"><a href="#Redis的发布订阅" class="headerlink" title="Redis的发布订阅"></a>Redis的发布订阅</h2><p>进程间的一种消息通信模式：发送者(pub)发送消息，订阅者(sub)接收消息。<br>先订阅后发布后才能收到消息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">#可以一次性订阅多个</div><div class="line">SUBSCRIBE c1 c2 c3</div><div class="line">#消息发布</div><div class="line">PUBLISH c2 hello-redis</div><div class="line">#订阅多个，通配符*</div><div class="line">PSUBSCRIBE new *</div><div class="line">#收取消息</div><div class="line">PUBLISH new1 redis2015</div></pre></td></tr></table></figure></p>
+<h2 id="Redis的复制-Master-Slave"><a href="#Redis的复制-Master-Slave" class="headerlink" title="Redis的复制(Master/Slave)"></a>Redis的复制(Master/Slave)</h2><p>也就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的master/slaver机制，Master以写为主，Slave以读为主,可实现读写分离，容灾恢复。</p>
+<h3 id="实现主从复制"><a href="#实现主从复制" class="headerlink" title="实现主从复制"></a>实现主从复制</h3><p>需修改配置文件细节操作：拷贝多个<code>redis.conf</code>文件，开启<code>daemonize yes</code>,<code>pid</code>文件名字,指定端口,<code>log</code>文件名字,<code>dump.rdb</code>名字<br><strong>原则</strong>：配从(库)不配主(库)<br>从库配置<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">slaveof 主库IP 主库端口</div></pre></td></tr></table></figure></p>
+<pre><code>每次与master断开之后，都需要重新连接，除非你配置进`redis.conf`文件，可以使用`info replication`可以查看当前redis的主从信息。
+</code></pre><h3 id="复制原理"><a href="#复制原理" class="headerlink" title="复制原理"></a>复制原理</h3><p><img src="http://res.cloudinary.com/drqf361hz/image/upload/v1505321467/Redis主从复制原理.png" alt=""><br>PSYNC命令来执行复制时的同步操作，包括完整重同步和部分重同步两种模式：<br><strong>完整重同步</strong>：通过让主服务器创建并发送RDB文件，以及向从服务器发送保存在缓存区里面的写命令在进行同步。<br><strong>部分重同步</strong>：用于处理断线后重复制的情况。当从服务器在断线后重新连接主服务器时，如果条件允许，主服务器可以将主从服务器连接断开期间执行的写命令发送给从服务器，从服务器只要接收并执行这些写命令，就可以将数据库更新至主服务器当前所处的状态。<br>部分重同步涉及到以下三点：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">复制偏移量</div><div class="line">复制积压缓冲区</div><div class="line">服务器运行ID</div></pre></td></tr></table></figure></p>
+<ol>
+<li><strong>复制偏移量</strong><br>执行复制的主从双方会分别维护一个复制偏移量，主服务器每次向从服务器发送N个字节数据时，就将自己的复制偏移量的值加上N，从服务器每接收到主服务器发送过来的N个字节数据时，也会将自己的偏移量加上N。<br>这样，如果主从服务器处于一致的状态时，那么主从服务器的复制偏移量总是相同的。</li>
+<li><strong>复制积压缓冲区</strong><br>如果由于断线后，主从服务器重新进行连接时，发现复制偏移量不一致了，这时就需要用到复制积压缓冲区了。复制积压缓冲区是由主服务器维护的一个固定长度、先进先出的队列，默认大小是1MB。当主服务器进行命令传播时，它不仅会将写命令发送给所有从服务器，还会将写命令写入复制积压缓冲区里面。这样主服务器的复制积压缓冲区就会保存着最近传播的写命令，并且记录着相应的复制偏移量。<br>当从服务器重新连接上主服务器时，如果发现复制偏移量不一致，就会在复制积压缓冲区中寻找对应偏移量之后的数据。如果该偏移量也不存在复制积压缓冲区中，那么只能进行完整重同步操作了。<br>由以上描述可知，复制积压缓冲区的大小在网络不稳定的环境中，会大大影响集群的性能。所以合理设置复制积压缓冲区是调优的一种手段，对应的具体参数是：<code>repl-backlog-size</code></li>
+<li><strong>服务器运行ID</strong><br>每一个Redis服务器，无论主从，都有一个由40个随机的十六进制的字符组成的运行ID。该ID在复制的时候，用于识别主服务器是否已经更改：如果主服务器的ID跟之前复制的不一致，则说明主服务器已经发生变更。这时需要进行完整重同步。<br>但是只要是重新连接master,一次完全同步（全量复制)将被自动执行。</li>
+</ol>
+<h3 id="哨兵模式-sentinel"><a href="#哨兵模式-sentinel" class="headerlink" title="哨兵模式(sentinel)"></a>哨兵模式(sentinel)</h3><p>其实就是能够后台监控主机是否故障，如果故障了根据投票数自动将从库转换为主库<br>例如：79带着80、81<br>自定义的<code>/myredis</code>目录下新建<code>sentinel.conf</code>文件<br>配置哨兵,填写内容<br> <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sentinel monitor 被监控数据库名字(自己起名字) 127.0.0.1 6379 1</div></pre></td></tr></table></figure></p>
+<p>上面最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主机，得票数多少后成为主机<br><strong>启动哨兵</strong><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">redis-sentinel /myredis/sentinel.conf</div></pre></td></tr></table></figure></p>
+<pre><code>一组sentinel能同时监控多个Master
+</code></pre><h3 id="复制的缺点"><a href="#复制的缺点" class="headerlink" title="复制的缺点"></a>复制的缺点</h3><p>复制延时：由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave机器数量的增加也会使这个问题更加严重。</p>
+<h2 id="Redis的Java客户端Jedis"><a href="#Redis的Java客户端Jedis" class="headerlink" title="Redis的Java客户端Jedis"></a>Redis的Java客户端Jedis</h2><h3 id="Jedis所需要的jar包"><a href="#Jedis所需要的jar包" class="headerlink" title="Jedis所需要的jar包"></a>Jedis所需要的jar包</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">commons-pool-<span class="number">1.6</span>.jar</div><div class="line">jedis-<span class="number">2.1</span>.0.jar</div></pre></td></tr></table></figure>
+<h3 id="Jedis常用操作"><a href="#Jedis常用操作" class="headerlink" title="Jedis常用操作"></a>Jedis常用操作</h3><ul>
+<li><strong>测试连通性</strong></li>
+<li><strong>一个key</strong></li>
+<li><strong>五大数据类型</strong></li>
+<li><p><strong>事务提交</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.atguigu.redis.test;</div><div class="line"><span class="keyword">import</span> redis.clients.jedis.Jedis;</div><div class="line"><span class="keyword">import</span> redis.clients.jedis.Response;</div><div class="line"><span class="keyword">import</span> redis.clients.jedis.Transaction;</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test03</span> </span></div><div class="line">&#123;</div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span></div><div class="line">  &#123;</div><div class="line">     Jedis jedis = <span class="keyword">new</span> Jedis(<span class="string">"127.0.0.1"</span>,<span class="number">6379</span>);</div><div class="line">     </div><div class="line">     <span class="comment">//监控key，如果该动了事务就被放弃</span></div><div class="line">     jedis.watch(<span class="string">"serialNum"</span>);</div><div class="line">     jedis.set(<span class="string">"serialNum"</span>,<span class="string">"s#####################"</span>);</div><div class="line">     jedis.unwatch();*/</div><div class="line">     </div><div class="line">     <span class="comment">//被当作一个命令进行执行</span></div><div class="line">     Transaction transaction = jedis.multi();</div><div class="line">     Response&lt;String&gt; response = transaction.get(<span class="string">"serialNum"</span>);</div><div class="line">     transaction.set(<span class="string">"serialNum"</span>,<span class="string">"s002"</span>);</div><div class="line">     response = transaction.get(<span class="string">"serialNum"</span>);</div><div class="line">     transaction.lpush(<span class="string">"list3"</span>,<span class="string">"a"</span>);</div><div class="line">     transaction.lpush(<span class="string">"list3"</span>,<span class="string">"b"</span>);</div><div class="line">     transaction.lpush(<span class="string">"list3"</span>,<span class="string">"c"</span>);</div><div class="line">     </div><div class="line">     transaction.exec();</div><div class="line">     <span class="comment">//2 transaction.discard();</span></div><div class="line">     System.out.println(<span class="string">"serialNum***********"</span>+response.get());</div><div class="line">          </div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>加锁</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestTransaction</span> </span>&#123;</div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">transMethod</span><span class="params">()</span> </span>&#123;</div><div class="line">     Jedis jedis = <span class="keyword">new</span> Jedis(<span class="string">"127.0.0.1"</span>, <span class="number">6379</span>);</div><div class="line">     <span class="keyword">int</span> balance;<span class="comment">// 可用余额</span></div><div class="line">     <span class="keyword">int</span> debt;<span class="comment">// 欠额</span></div><div class="line">     <span class="keyword">int</span> amtToSubtract = <span class="number">10</span>;<span class="comment">// 实刷额度</span></div><div class="line">     jedis.watch(<span class="string">"balance"</span>);</div><div class="line">     <span class="comment">//jedis.set("balance","5");//此句不该出现，讲课方便。模拟其他程序已经修改了该条目</span></div><div class="line">     balance = Integer.parseInt(jedis.get(<span class="string">"balance"</span>));</div><div class="line">     <span class="keyword">if</span> (balance &lt; amtToSubtract) &#123;</div><div class="line">       jedis.unwatch();</div><div class="line">       System.out.println(<span class="string">"modify"</span>);</div><div class="line">       <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">     &#125; <span class="keyword">else</span> &#123;</div><div class="line">       System.out.println(<span class="string">"***********transaction"</span>);</div><div class="line">       Transaction transaction = jedis.multi();</div><div class="line">       transaction.decrBy(<span class="string">"balance"</span>, amtToSubtract);</div><div class="line">       transaction.incrBy(<span class="string">"debt"</span>, amtToSubtract);</div><div class="line">       transaction.exec();</div><div class="line">       balance = Integer.parseInt(jedis.get(<span class="string">"balance"</span>));</div><div class="line">       debt = Integer.parseInt(jedis.get(<span class="string">"debt"</span>));</div><div class="line">       System.out.println(<span class="string">"*******"</span> + balance);</div><div class="line">       System.out.println(<span class="string">"*******"</span> + debt);</div><div class="line">       <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">     &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="comment">/**</span></div><div class="line">   * 通俗点讲，watch命令就是标记一个键，如果标记了一个键， 在提交事务前如果该键被别人修改过，那事务就会失败，这种情况通常可以在程序中</div><div class="line">   * 重新再尝试一次。</div><div class="line">   * 首先标记了键balance，然后检查余额是否足够，不足就取消标记，并不做扣减； 足够的话，就启动事务进行更新操作，</div><div class="line">   * 如果在此期间键balance被其它人修改， 那在提交事务（执行exec）时就会报错， 程序中通常可以捕获这类错误再重新执行一次，直到成功。</div><div class="line">   */</div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">     TestTransaction test = <span class="keyword">new</span> TestTransaction();</div><div class="line">     <span class="keyword">boolean</span> retValue = test.transMethod();</div><div class="line">     System.out.println(<span class="string">"main retValue-------: "</span> + retValue);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>主从复制</strong><br>6379,6380启动，先各自先独立，主写，从读</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</div><div class="line">     Jedis jedis_M = <span class="keyword">new</span> Jedis(<span class="string">"127.0.0.1"</span>,<span class="number">6379</span>);</div><div class="line">     Jedis jedis_S = <span class="keyword">new</span> Jedis(<span class="string">"127.0.0.1"</span>,<span class="number">6380</span>);</div><div class="line">     </div><div class="line">     jedis_S.slaveof(<span class="string">"127.0.0.1"</span>,<span class="number">6379</span>);</div><div class="line">     jedis_M.set(<span class="string">"k6"</span>,<span class="string">"v6"</span>);</div><div class="line">     Thread.sleep(<span class="number">500</span>);</div><div class="line">     System.out.println(jedis_S.get(<span class="string">"k6"</span>));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>JedisPool线程池</strong><br>获取Jedis实例需要从JedisPool中获取，用完Jedis实例需要返还给JedisPool，如果Jedis在使用过程中出错，则也需要还给JedisPool，案例见代码: JedisPoolUtil</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.atguigu.redis.test;</div><div class="line"></div><div class="line"><span class="keyword">import</span> redis.clients.jedis.Jedis;</div><div class="line"><span class="keyword">import</span> redis.clients.jedis.JedisPool;</div><div class="line"><span class="keyword">import</span> redis.clients.jedis.JedisPoolConfig;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JedisPoolUtil</span> </span>&#123;</div><div class="line"></div><div class="line"><span class="comment">//被volatile修饰的变量不会被本地线程缓存，对该变量的读写都是直接操作共享内存。</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">volatile</span> JedisPool jedisPool = <span class="keyword">null</span>;</div><div class="line">             </div><div class="line">  <span class="function"><span class="keyword">private</span> <span class="title">JedisPoolUtil</span><span class="params">()</span> </span>&#123;&#125;</div><div class="line">  </div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> JedisPool <span class="title">getJedisPoolInstance</span><span class="params">()</span></span>&#123;</div><div class="line">  </div><div class="line">     <span class="keyword">if</span>(<span class="keyword">null</span> == jedisPool)&#123;</div><div class="line">     </div><div class="line">       <span class="keyword">synchronized</span> (JedisPoolUtil.class)&#123;</div><div class="line">       </div><div class="line">          <span class="keyword">if</span>(<span class="keyword">null</span> == jedisPool)&#123;</div><div class="line">          	JedisPoolConfig poolConfig = <span class="keyword">new</span> JedisPoolConfig();</div><div class="line">           	poolConfig.setMaxActive(<span class="number">1000</span>);</div><div class="line">           	poolConfig.setMaxIdle(<span class="number">32</span>);</div><div class="line">           	poolConfig.setMaxWait(<span class="number">100</span>*<span class="number">1000</span>);</div><div class="line">           	poolConfig.setTestOnBorrow(<span class="keyword">true</span>);</div><div class="line">            </div><div class="line">          	jedisPool = <span class="keyword">new</span> JedisPool(poolConfig,<span class="string">"127.0.0.1"</span>);</div><div class="line">         &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> jedisPool;</div><div class="line"> &#125;</div><div class="line">  </div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">release</span><span class="params">(JedisPool jedisPool,Jedis jedis)</span></span>&#123;</div><div class="line">     <span class="keyword">if</span>(<span class="keyword">null</span> != jedis)&#123;</div><div class="line">      jedisPool.returnResourceObject(jedis);</div><div class="line">     &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>  获取一个连接jedisPool.getResource();        </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.atguigu.redis.test;  </div><div class="line"><span class="keyword">import</span> redis.clients.jedis.Jedis;</div><div class="line"><span class="keyword">import</span> redis.clients.jedis.JedisPool;</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test01</span> </span>&#123;</div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">     JedisPool jedisPool = JedisPoolUtil.getJedisPoolInstance();</div><div class="line">     Jedis jedis = <span class="keyword">null</span>;</div><div class="line">     </div><div class="line">     <span class="keyword">try</span> </div><div class="line">     &#123;</div><div class="line">       jedis = jedisPool.getResource();</div><div class="line">       jedis.set(<span class="string">"k18"</span>,<span class="string">"v183"</span>);</div><div class="line">       </div><div class="line">     &#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">       	e.printStackTrace();</div><div class="line">     &#125;<span class="keyword">finally</span>&#123;</div><div class="line">       	JedisPoolUtil.release(jedisPool, jedis);</div><div class="line">     &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>JedisPoolConfig配置总结</strong><br>JedisPool的配置参数大部分是由JedisPoolConfig的对应项来赋值的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">#控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted。</div><div class="line">maxActive</div><div class="line">#控制一个pool最多有多少个状态为idle(空闲)的jedis实例</div><div class="line">maxIdle：</div><div class="line">#表示当pool中的jedis实例都被allocated完时，pool要采取的操作；默认有三种。</div><div class="line">whenExhaustedAction：</div><div class="line">#表示无jedis实例时，直接抛出NoSuchElementException；</div><div class="line">WHEN_EXHAUSTED_FAIL</div><div class="line">#则表示阻塞住，或者达到maxWait时抛出JedisConnectionException；</div><div class="line">WHEN_EXHAUSTED_BLOCK</div><div class="line">#则表示新建一个jedis实例，也就说设置的maxActive无用； </div><div class="line">WHEN_EXHAUSTED_GROW</div><div class="line">#表示当borrow一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛JedisConnectionException；</div><div class="line">maxWait</div><div class="line">#获得一个jedis实例的时候是否检查连接可用性（ping()）；如果为true，则得到的jedis实例均是可用的；</div><div class="line">testOnBorrow</div><div class="line">#return 一个jedis实例给pool时，是否检查连接可用性（ping()）；</div><div class="line">testOnReturn</div><div class="line">#如果为true，表示有一个idle object evitor线程对idle object进行扫描，如果validate失败，此object会被从pool中drop掉；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；</div><div class="line">testWhileIdle</div><div class="line">#表示idle object evitor两次扫描之间要sleep的毫秒数；</div><div class="line">timeBetweenEvictionRunsMillis</div><div class="line">#表示idle object evitor每次扫描的最多的对象数；</div><div class="line">numTestsPerEvictionRun</div><div class="line">#表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；</div><div class="line">minEvictableIdleTimeMillis</div><div class="line">#在minEvictableIdleTimeMillis基础上，加入了至少minIdle个对象已经在pool里面了。如果为-1，evicted不会根据idle time驱逐任何对象。如果minEvictableIdleTimeMillis&gt;0，则此项设置无意义，且只有在timeBetweenEvictionRunsMillis大于0时才有意义；</div><div class="line">softMinEvictableIdleTimeMillis</div><div class="line">#borrowObject返回对象时，是采用DEFAULT_LIFO（last in first out，即类似cache的最频繁使用队列），如果为False，则表示FIFO队列；</div><div class="line">lifo</div><div class="line">#其中JedisPoolConfig对一些参数的默认设置如下：</div><div class="line">testWhileIdle=true</div><div class="line">minEvictableIdleTimeMills=60000</div><div class="line">timeBetweenEvictionRunsMillis=30000</div><div class="line">numTestsPerEvictionRun=-1</div></pre></td></tr></table></figure></li>
+</ul>
+]]></content>
+      
+        <categories>
+            
+            <category> 数据库 </category>
+            
+            <category> Redis </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Redis </tag>
+            
+            <tag> 分布式缓存 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+  
+  
 </search>
